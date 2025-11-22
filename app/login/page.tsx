@@ -2,17 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-// Asegúrate de tener un icono de Spinner SVG disponible o usa un componente
-// En este ejemplo, he incluido un SVG simple para el spinner
-const Spinner = () => (
-  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
-);
-
-// NOTA: Asegúrate de que esta librería exista
-import { loginWithEmail } from "@/lib/authClient"; 
+import { loginWithEmail } from "@/lib/authClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,14 +16,10 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      // Reemplaza esto con tu lógica de inicio de sesión real
-      // await new Promise(resolve => setTimeout(resolve, 1500)); 
       await loginWithEmail(email, password);
       router.push("/");
     } catch (err: any) {
-      // Manejo de errores más específico
-      const errorMessage = err?.message || "Error desconocido al iniciar sesión. Inténtalo de nuevo.";
-      setError(errorMessage);
+      setError(err?.message ?? "No se ha podido iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -42,7 +28,7 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center p-4 antialiased">
       <main className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-        {/* Panel izquierdo - Información (Más pulido) */}
+        {/* Panel izquierdo - Información */}
         <div className="flex flex-col justify-between rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-8 lg:p-14 shadow-2xl transition-all hover:shadow-indigo-500/50">
           <div>
             <div className="flex items-center gap-2 text-sm font-medium text-white/90 mb-2">
@@ -96,7 +82,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Panel derecho - Formulario (Más limpio y enfocado) */}
+        {/* Panel derecho - Formulario */}
         <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-2xl border border-slate-100 flex flex-col justify-center transition-all hover:shadow-sky-200/50">
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -116,7 +102,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-3 mb-10">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">👋 Inicia sesión</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">Inicia sesión</h2>
             <p className="text-slate-600 text-base">
               Entra en tu cuenta para seguir validando ideas.
             </p>
@@ -191,7 +177,7 @@ export default function LoginPage() {
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
-                  <Spinner />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>Iniciando sesión...</span>
                 </div>
               ) : (
@@ -238,10 +224,10 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {/* Elementos decorativos (Más dinámicos) */}
-      <div className="hidden lg:block absolute top-10 left-10 w-20 h-20 rounded-full bg-sky-200/50 animate-bounce duration-[5000ms] delay-500" />
-      <div className="hidden lg:block absolute bottom-10 right-10 w-16 h-16 rounded-full bg-purple-200/50 animate-bounce duration-[4000ms] delay-1000" />
-      <div className="hidden lg:block absolute top-1/3 right-20 w-12 h-12 rounded-full bg-blue-200/50 animate-bounce duration-[6000ms]" />
+      {/* Elementos decorativos */}
+      <div className="hidden lg:block absolute top-10 left-10 w-20 h-20 rounded-full bg-sky-200/50 animate-bounce" style={{ animationDuration: '5s', animationDelay: '0.5s' }} />
+      <div className="hidden lg:block absolute bottom-10 right-10 w-16 h-16 rounded-full bg-purple-200/50 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }} />
+      <div className="hidden lg:block absolute top-1/3 right-20 w-12 h-12 rounded-full bg-blue-200/50 animate-bounce" style={{ animationDuration: '6s' }} />
     </div>
   );
 }
