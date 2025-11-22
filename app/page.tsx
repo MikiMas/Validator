@@ -2,6 +2,669 @@
 
 import { useAuth } from "./AuthContext";
 
+function LandingPublica() {
+  return (
+    <div
+      dangerouslySetInnerHTML={{
+        __html: `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validator - Valida tu idea de startup en minutos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #cbd5e1;
+            --success: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--secondary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--secondary);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--secondary);
+            border: 1px solid var(--gray-light);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .hero-image {
+            max-width: 900px;
+            margin: 50px auto 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 70px;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+        
+        .feature-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(79, 70, 229, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-icon i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: var(--gray);
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
+            background-color: #f8fafc;
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background-color: var(--gray-light);
+            z-index: 1;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            padding: 0 15px;
+        }
+        
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border: 2px solid var(--gray-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step p {
+            color: var(--gray);
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: var(--gray);
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+        
+        .author-info h4 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .author-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            opacity: 0.9;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-light {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .btn-light:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .btn-outline-light {
+            background-color: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--secondary);
+            color: white;
+            padding: 70px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #334155;
+            padding-top: 30px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .nav-links {
+                gap: 20px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-buttons, .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .steps {
+                flex-direction: column;
+                gap: 40px;
+            }
+            
+            .steps::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    Validator
+                </a>
+                <div class="nav-links">
+                    <a href="#features">Características</a>
+                    <a href="#how-it-works">Cómo funciona</a>
+                    <a href="#testimonials">Testimonios</a>
+                </div>
+                <div class="nav-buttons">
+                    <a href="/login" class="btn btn-secondary">Iniciar sesión</a>
+                    <a href="/register" class="btn btn-primary">Crear cuenta</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Valida tu idea de startup en minutos</h1>
+            <p>Nuestra plataforma te ayuda a crear una landing page y anuncios en Meta para testear tu idea tecnológica antes de invertir tiempo y recursos en desarrollo.</p>
+            <div class="hero-buttons">
+                <a href="/register" class="btn btn-primary">Comenzar ahora</a>
+                <a href="#how-it-works" class="btn btn-secondary">Ver cómo funciona</a>
+            </div>
+            <div class="hero-image">
+                <!-- Placeholder for dashboard image -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 400px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
+                    Vista previa del dashboard de Validator
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Todo lo que necesitas para validar tu idea</h2>
+                <p>Nuestra plataforma combina herramientas poderosas con una interfaz simple para que puedas enfocarte en lo que importa: tu idea.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Landing Page Instantánea</h3>
+                    <p>Crea una landing page profesional en minutos sin necesidad de conocimientos técnicos. Solo describe tu idea y nosotros hacemos el resto.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <h3>Campañas en Meta</h3>
+                    <p>Genera anuncios optimizados para Facebook e Instagram que te ayudarán a llegar a tu audiencia objetivo y medir el interés real.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Métricas Claras</h3>
+                    <p>Obtén datos concretos sobre el interés en tu idea: visitas, conversiones, tiempo en página y más para tomar decisiones informadas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>Así de simple es validar tu idea</h2>
+                <p>En solo tres pasos podrás tener tu idea en el mercado y recibir feedback real de potenciales clientes.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Describe tu idea</h3>
+                    <p>Completa nuestro formulario intuitivo con los detalles de tu startup o producto.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Genera tu landing</h3>
+                    <p>Nuestra plataforma crea automáticamente una landing page profesional.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Lanza y analiza</h3>
+                    <p>Publica tu landing y campañas en Meta, luego analiza los resultados.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>Lo que dicen nuestros emprendedores</h2>
+                <p>Miles de ideas han sido validadas usando nuestra plataforma.</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Validator me ayudó a confirmar que mi aplicación tenía mercado real antes de invertir en desarrollo. Ahorré meses de trabajo y miles de dólares."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar" style="background-color: #4f46e5;">AM</div>
+                        <div class="author-info">
+                            <h4>Ana Martínez</h4>
+                            <p>Fundadora de FitTrack</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"En solo 48 horas pude validar mi idea y recibir más de 200 suscripciones de interés. La plataforma es increíblemente fácil de usar."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar" style="background-color: #10b981;">CR</div>
+                        <div class="author-info">
+                            <h4>Carlos Rodríguez</h4>
+                            <p>Creador de EcoBox</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Los datos que obtuve me ayudaron a pivotar mi idea inicial hacia algo que realmente resuena con mi audiencia. ¡Invaluable!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar" style="background-color: #f59e0b;">LG</div>
+                        <div class="author-info">
+                            <h4>Laura González</h4>
+                            <p>CEO de LearnLingua</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>¿Listo para validar tu idea?</h2>
+            <p>Únete a miles de emprendedores que están tomando decisiones informadas sobre sus startups.</p>
+            <div class="cta-buttons">
+                <a href="/register" class="btn btn-light">Comenzar gratis</a>
+                <a href="#features" class="btn btn-outline-light">Saber más</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Validator</h3>
+                    <p style="color: #94a3b8; margin-bottom: 20px;">La plataforma líder para validar ideas de startups de forma rápida y efectiva.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Enlaces</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Inicio</a></li>
+                        <li><a href="#features">Características</a></li>
+                        <li><a href="#how-it-works">Cómo funciona</a></li>
+                        <li><a href="#testimonials">Testimonios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Términos de servicio</a></li>
+                        <li><a href="#">Política de privacidad</a></li>
+                        <li><a href="#">Cookies</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contacto</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:soporte@validator.com">soporte@validator.com</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Validator. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>`
+      }}
+    />
+  );
+}
+
 function FormularioValidator() {
   return (
     <div
@@ -562,33 +1225,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white p-6">
-        <div className="max-w-2xl text-center space-y-6">
-          <h1 className="text-4xl font-extrabold">Validator</h1>
-          <p className="text-lg text-slate-300">
-            Crea una landing y un anuncio en Meta para validar tu idea tecnológica en minutos.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/login"
-              className="px-6 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold"
-            >
-              Iniciar sesión
-            </a>
-            <a
-              href="/register"
-              className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 font-semibold border border-slate-600"
-            >
-              Crear cuenta
-            </a>
-          </div>
-          <p className="text-sm text-slate-400">
-            Una vez dentro verás el formulario para describir tu idea y generar la landing.
-          </p>
-        </div>
-      </main>
-    );
+    return <LandingPublica />;
   }
 
   return <FormularioValidator />;
