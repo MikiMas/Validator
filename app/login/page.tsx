@@ -26,84 +26,107 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
-      <main className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-2xl p-8 space-y-6 border border-gray-700 shadow-2xl">
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="flex justify-center items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4 py-10">
+      <main className="w-full max-w-4xl">
+        <div className="grid gap-0 rounded-3xl bg-white shadow-xl border border-slate-200 md:grid-cols-[1.1fr,1fr] overflow-hidden">
+          <div className="hidden md:flex flex-col justify-between bg-gradient-to-br from-[#4f46e5] via-[#6366f1] to-[#0f172a] text-white p-8">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-medium text-indigo-100">
+                <i className="fas fa-chart-line" />
+                <span>Validator</span>
               </div>
-              <span className="text-2xl font-bold text-white">Validator</span>
+              <h1 className="mt-6 text-3xl font-extrabold leading-tight">
+                Valida tu idea sin escribir una sola línea de código
+              </h1>
+              <p className="mt-3 text-sm text-indigo-100/90">
+                Crea landings, lanza anuncios en Meta y entiende en minutos si merece la pena invertir en tu próxima idea.
+              </p>
             </div>
-            <h1 className="text-3xl font-bold text-white mt-4">Bienvenido</h1>
-            <p className="text-gray-400">Inicia sesión en tu cuenta</p>
+
+            <div className="space-y-3 text-sm text-indigo-100/90">
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">✓</span>
+                <p>Feedback real de usuarios antes de construir el producto.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-xs">✓</span>
+                <p>Métricas claras de conversión de tus campañas.</p>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-300">Email</label>
-              <div className="relative">
+          <div className="bg-white p-6 sm:p-8 flex flex-col justify-center">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4f46e5] to-[#6366f1] text-white">
+                  <span className="text-sm font-semibold">V</span>
+                </div>
+                <span className="text-sm font-semibold tracking-tight text-slate-900">Validator</span>
+              </div>
+              <a
+                href="/register"
+                className="text-xs font-medium text-[#4f46e5] hover:text-[#4338ca]"
+              >
+                Crear cuenta
+              </a>
+            </div>
+
+            <div className="space-y-1 mb-6">
+              <h2 className="text-2xl font-bold text-slate-900">Inicia sesión</h2>
+              <p className="text-sm text-slate-500">
+                Entra en tu cuenta para seguir validando ideas.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">Email</label>
                 <input
                   type="email"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 text-white placeholder-gray-400"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   required
                 />
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-300">Contraseña</label>
-                <a href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                  ¿Olvidaste tu contraseña?
-                </a>
-              </div>
-              <div className="relative">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-slate-700">Contraseña</label>
+                  <a href="/forgot-password" className="text-xs text-[#4f46e5] hover:text-[#4338ca]">
+                    ¿Olvidaste tu contraseña?
+                  </a>
+                </div>
                 <input
                   type="password"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 text-white placeholder-gray-400"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                 />
               </div>
-            </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30">
-                <p className="text-sm text-red-300 text-center">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full py-4 rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Iniciando sesión...</span>
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                  <p className="text-xs text-red-600 text-center">{error}</p>
                 </div>
-              ) : (
-                "Iniciar sesión"
               )}
-            </button>
-          </form>
 
-          <div className="text-center">
-            <p className="text-gray-400">
+              <button
+                type="submit"
+                className="w-full rounded-lg bg-[#4f46e5] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#4338ca] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+              </button>
+            </form>
+
+            <p className="mt-4 text-xs text-center text-slate-500">
               ¿No tienes cuenta?{" "}
-              <a href="/register" className="text-blue-400 hover:text-blue-300 font-semibold">
-                Regístrate
+              <a href="/register" className="text-[#4f46e5] hover:text-[#4338ca] font-medium">
+                Regístrate gratis
               </a>
             </p>
           </div>
