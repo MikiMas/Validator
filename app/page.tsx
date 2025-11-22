@@ -1,4 +1,8 @@
-export default function Home() {
+"use client";
+
+import { useAuth } from "./AuthContext";
+
+function FormularioValidator() {
   return (
     <div
       dangerouslySetInnerHTML={{
@@ -544,4 +548,48 @@ export default function Home() {
       }}
     />
   );
+}
+
+export default function Home() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+        <p>Cargando...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white p-6">
+        <div className="max-w-2xl text-center space-y-6">
+          <h1 className="text-4xl font-extrabold">Validator</h1>
+          <p className="text-lg text-slate-300">
+            Crea una landing y un anuncio en Meta para validar tu idea tecnológica en minutos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/login"
+              className="px-6 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold"
+            >
+              Iniciar sesión
+            </a>
+            <a
+              href="/register"
+              className="px-6 py-3 rounded-lg bg-slate-800 hover:bg-slate-700 font-semibold border border-slate-600"
+            >
+              Crear cuenta
+            </a>
+          </div>
+          <p className="text-sm text-slate-400">
+            Una vez dentro verás el formulario para describir tu idea y generar la landing.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  return <FormularioValidator />;
 }
