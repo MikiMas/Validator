@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { db } from "@/lib/firestore";
-import { doc, setDoc, arrayUnion } from "firebase/firestore";
+import { supabase } from "@/lib/supabaseClient";
 
 interface WaitlistFormProps {
   slug: string;
@@ -23,19 +22,18 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
 
     try {
       console.log("[WaitlistForm] submit", { email, slug });
-      const ideaRef = doc(db, "ideas", slug);
 
-      await setDoc(
-        ideaRef,
-        {
-          waitlist: arrayUnion({
-            email,
-            createdAt: new Date(),
-          }),
-        },
-        { merge: true }
-      );
-      console.log("[WaitlistForm] guardado OK");
+      const { error } = await supabase.from("waitlist_entries").insert({
+        slug,
+        email,
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("[WaitlistForm] guardado OK en Supabase");
       setSuccess(true);
       setEmail("");
     } catch (err: any) {

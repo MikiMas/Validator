@@ -1,92 +1,44 @@
-import { db } from "@/lib/firestore";
+export const dynamic = "force-dynamic";
+
+import { supabase } from "@/lib/supabaseClient";
 import { doc, getDoc } from "firebase/firestore";
 import WaitlistForm from "./WaitlistForm";
 
 export default async function Landing({ params }: any) {
-  const ref = doc(db, "ideas", params.slug);
-  const snap = await getDoc(ref);
+  const { data, error } = await supabase
+    .from("ideas")
+    .select("landing")
+    .eq("slug", params.slug)
+    .single();
 
-  if (!snap.exists()) {
+  if (error || !data) {
     return <div className="p-10 text-center">Landing no encontrada</div>;
   }
 
-  const idea = snap.data();
-  const landing = idea.landing;
+  const landing = (data as any).landing;
 
   return (
-    <main className="landing-body">
-      {/* HERO */}
-      <section className="hero">
-        <div className="container hero-content">
-          <h1>{landing.heroTitle}</h1>
-          <p>{landing.heroSubtitle}</p>
-          <a href="#waitlist" className="btn btn-primary">
-            {landing.cta}
-          </a>
-        </div>
-      </section>
+    <main className="min-h-screen bg-white text-slate-900 font-sans flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
+        {/* HERO */}
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+          {landing.heroTitle}
+        </h1>
+        <p className="text-xl text-slate-600 mb-12 leading-relaxed">
+          {landing.heroDescription}
+        </p>
 
-      <WaitlistForm slug={params.slug} />
+        {/* WAITLIST SECTION */}
+        <div className="w-full max-w-md bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm">
+          <h2 className="text-2xl font-bold mb-2">{landing.waitlistTitle || "Únete a la lista de espera"}</h2>
+          <p className="text-slate-600 mb-6">{landing.waitlistOffer}</p>
 
-      {/* FEATURES / BENEFICIOS */}
-      <section className="features">
-        <div className="container">
-          <div className="text-center">
-            <h2>¿Por qué esta idea importa?</h2>
-          </div>
-          <div className="features-grid">
-            {landing.benefits.map((b: string, i: number) => (
-              <div key={i} className="feature-card">
-                <div className="feature-icon">✨</div>
-                <h3>{b}</h3>
-              </div>
-            ))}
-          </div>
+          <WaitlistForm slug={params.slug} />
         </div>
-      </section>
+      </div>
 
-      {/* CÓMO FUNCIONA */}
-      <section className="how-it-works" id="how-it-works">
-        <div className="container">
-          <div className="text-center">
-            <h2>Cómo funciona</h2>
-          </div>
-          <div className="steps-container">
-            {landing.howItWorks.map((step: any, i: number) => (
-              <div key={i} className="step-card">
-                <div className="step-number">{i + 1}</div>
-                <h3>{step.title}</h3>
-                <p>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="faq" id="faq">
-        <div className="container">
-          <div className="text-center">
-            <h2>Preguntas frecuentes</h2>
-          </div>
-          <div className="faq-container">
-            {landing.faqs.map((f: any, i: number) => (
-              <div key={i} className="faq-item">
-                <div className="faq-question">{f.q}</div>
-                <div className="faq-answer">
-                  <p>{f.a}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer>
-        <div className="container">
-          <p>{landing.footerLine}</p>
-        </div>
+      <footer className="p-6 text-center text-sm text-slate-400">
+        <p>&copy; {new Date().getFullYear()} {landing.heroTitle}. All rights reserved.</p>
       </footer>
     </main>
   );

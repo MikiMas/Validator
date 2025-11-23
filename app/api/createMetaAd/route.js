@@ -8,8 +8,6 @@ export async function POST(req) {
             // landing / destino
             url,
             projectName,
-            // ad set existente
-            adsetId,
             // creative
             message,
             picture,
@@ -21,11 +19,12 @@ export async function POST(req) {
         const ACCESS_TOKEN = process.env.META_TOKEN;
         const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT;
         const PAGE_ID = process.env.META_PAGE_ID;
+        const ADSET_ID = process.env.META_ADSET_ID;
 
-        if (!ACCESS_TOKEN || !AD_ACCOUNT_ID || !PAGE_ID) {
+        if (!ACCESS_TOKEN || !AD_ACCOUNT_ID || !PAGE_ID || !ADSET_ID) {
             return new Response(
                 JSON.stringify({
-                    error: "Faltan variables de entorno META_TOKEN, META_AD_ACCOUNT o META_PAGE_ID",
+                    error: "Faltan variables de entorno META_TOKEN, META_AD_ACCOUNT, META_PAGE_ID o META_ADSET_ID",
                 }),
                 { status: 500 }
             );
@@ -56,7 +55,7 @@ export async function POST(req) {
             `https://graph.facebook.com/v19.0/${AD_ACCOUNT_ID}/ads`,
             {
                 name: adName || `Ad - ${projectName}`,
-                adset_id: adsetId,
+                adset_id: ADSET_ID,
                 creative: { creative_id: creativeId },
                 status: "ACTIVE",
             },
@@ -73,6 +72,7 @@ export async function POST(req) {
         );
 
     } catch (error) {
+        console.error("Error creating Meta Ad:", error.response?.data || error.message);
         return new Response(
             JSON.stringify({
                 error: error.response?.data || error.message,

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
+import { GenerationProvider } from "./GenerationContext";
 
 export const metadata = {
   title: "Validator",
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <GenerationProvider>{children}</GenerationProvider>
+        </AuthProvider>
       </body>
     </html>
   );
