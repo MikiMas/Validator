@@ -165,10 +165,6 @@ function Dashboard() {
                 Crea nuevos experimentos y revisa el estado de tus validaciones.
               </p>
             </div>
-            <div className="dash-header-user">
-              <div className="dash-header-avatar">JD</div>
-              <span className="dash-header-name">User</span>
-            </div>
           </header>
 
           <div className="dash-grid">
@@ -229,7 +225,8 @@ function Dashboard() {
                           </div>
                           <button
                             onClick={() => router.push(`/experiment/${exp.slug}`)}
-                            className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded transition-colors"
+                            className="dash-card-button-secondary"
+                            style={{ width: "auto", padding: "0.45rem 0.9rem" }}
                           >
                             Ver detalles
                           </button>
