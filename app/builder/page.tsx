@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../AuthContext";
 import { useGeneration } from "../GenerationContext";
@@ -23,13 +23,85 @@ function MultiStepBuilder() {
   const [adMessage, setAdMessage] = useState("");
   const [adPicture, setAdPicture] = useState("");
 
-  const totalSteps = 2;
+  // Step 3: Campaign Settings
+  const [campaignDuration, setCampaignDuration] = useState(7);
+  const [dailyBudget, setDailyBudget] = useState(5);
+  const [estimation, setEstimation] = useState<{
+    loading: boolean;
+    data: {
+      estimatedImpressions: number;
+      estimatedClicks: number;
+      estimatedCPC: string;
+      cpm: number;
+      maxCampaignDays: number;
+    } | null;
+    error: string | null;
+  }>({ loading: false, data: null, error: null });
+
+  const totalSteps = 3;
   const progressPercent = (step / totalSteps) * 100;
 
   if (!user) {
     router.push("/login");
     return null;
   }
+
+  const estimateImpressions = async (budget: number) => {
+    if (budget < 1) {
+      setEstimation({
+        loading: false,
+        data: null,
+        error: "El presupuesto mínimo es de 1€"
+      });
+      return;
+    }
+
+    setEstimation(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const response = await fetch('/api/estimateImpressions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dailyBudget: budget })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al calcular la estimación');
+      }
+
+      setEstimation({
+        loading: false,
+        data: {
+          estimatedImpressions: data.estimatedImpressions,
+          estimatedClicks: data.estimatedClicks,
+          estimatedCPC: data.estimatedCPC,
+          cpm: data.cpm,
+          maxCampaignDays: data.maxCampaignDays
+        },
+        error: null
+      });
+    } catch (error: any) {
+      console.error('Error al estimar impresiones:', error);
+      setEstimation({
+        loading: false,
+        data: null,
+        error: error.message
+      });
+    }
+  };
+
+  // Efecto para la estimación con debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (dailyBudget >= 1) {
+        estimateImpressions(dailyBudget);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [dailyBudget]);
 
   const handleNext = (e: FormEvent) => {
     e.preventDefault();
@@ -45,6 +117,17 @@ function MultiStepBuilder() {
     }
   };
 
+  // Efecto para la estimación con debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (dailyBudget >= 1) {
+        estimateImpressions(dailyBudget);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [dailyBudget]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (submitting) return;
@@ -57,7 +140,8 @@ function MultiStepBuilder() {
     router.push("/");
 
     try {
-      const landingRes = await fetch("/api/generateLanding", {
+      // Generar landing y campaña en un solo endpoint
+      const response = await fetch("/api/generateLanding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -65,60 +149,37 @@ function MultiStepBuilder() {
           ideaDescription: basicDescription,
           waitlistOffer,
           userId: user.id,
+          // Configuración de campaña
+          campaignSettings: {
+            durationDays: campaignDuration,
+            dailyBudget,
+            totalBudget: dailyBudget * campaignDuration
+          },
+          // Creative del anuncio
+          adHeadline,
+          adMessage,
+          adPicture
         }),
       });
 
-      if (!landingRes.ok) {
-        throw new Error("Error al generar la landing");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al generar la landing");
       }
 
-      const landingData = await landingRes.json();
-      const ideaSlug = landingData?.slug;
+      const data = await response.json();
+      const ideaSlug = data?.slug;
 
       if (ideaSlug) {
         setLastLandingSlug(ideaSlug);
       }
 
-      // Auto-construct the URL for the ad
-      const generatedAdUrl = `${window.location.origin}/${ideaSlug}`;
-
-      if (generatedAdUrl) {
-        const adRes = await fetch("/api/createMetaAd", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: generatedAdUrl,
-            projectName: projectName, // Use the main project name
-            picture: adPicture,
-            message: adMessage, // User only provides the main copy
-            adName: `Ad - ${projectName}`, // Auto-generate internal name
-            callToActionType: "SIGN_UP", // Best for waitlists
-          }),
-        });
-
-        if (!adRes.ok) {
-          throw new Error("Error al crear el anuncio en Meta");
-        }
-
-        const adData = await adRes.json();
-        if (adData?.adId) {
-          setLastAdId(adData.adId as string);
-
-          if (ideaSlug) {
-            await fetch("/api/updateIdea", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                slug: ideaSlug,
-                adId: adData.adId,
-              }),
-            });
-          }
-        }
+      if (data?.adData?.adId) {
+        setLastAdId(data.adData.adId);
       }
 
       setStatus("completed");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setStatus("error");
     } finally {
@@ -171,6 +232,12 @@ function MultiStepBuilder() {
                   <label className="builder-label" htmlFor="basicDescription">
                     Descripción básica *
                   </label>
+                  <p style={{ fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.4rem" }}>
+                    Explica en 3-4 frases:
+                    qué problema resuelves y para quién,
+                    cómo lo solucionas (tu propuesta de valor)
+                    y qué hace que tu solución sea diferente o mejor.
+                  </p>
                   <div className="builder-input-wrapper">
                     <textarea
                       id="basicDescription"
@@ -263,6 +330,119 @@ function MultiStepBuilder() {
                     <span className="builder-input-icon">
                       <i className="fas fa-image" />
                     </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="builder-form-grid">
+                <div className="builder-field builder-field-full">
+                  <label className="builder-label" htmlFor="campaignDuration">
+                    Duración de la campaña (días) *
+                  </label>
+                  <div className="builder-input-wrapper">
+                    <input
+                      id="campaignDuration"
+                      type="number"
+                      min="1"
+                      max={estimation.data?.maxCampaignDays || 90}
+                      value={campaignDuration}
+                      onChange={(e) => {
+                        const value = Math.min(Number(e.target.value), estimation.data?.maxCampaignDays || 90);
+                        setCampaignDuration(Math.max(1, value));
+                      }}
+                      className="builder-input"
+                      disabled={estimation.loading}
+                      required
+                    />
+                    <span className="builder-input-icon">
+                      <i className="fas fa-calendar-days" />
+                    </span>
+                  </div>
+                  <p className="builder-field-hint">
+                    Máximo {estimation.data?.maxCampaignDays || 90} días
+                  </p>
+                </div>
+
+                <div className="builder-field builder-field-full">
+                  <label className="builder-label" htmlFor="dailyBudget">
+                    Presupuesto diario (€) *
+                  </label>
+                  <div className="builder-input-wrapper">
+                    <input
+                      id="dailyBudget"
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      value={dailyBudget}
+                      onChange={(e) => setDailyBudget(Number(e.target.value))}
+                      className="builder-input"
+                      disabled={estimation.loading}
+                      required
+                    />
+                    <span className="builder-input-icon">
+                      <i className="fas fa-euro-sign" />
+                    </span>
+                  </div>
+                  <p className="builder-field-hint">
+                    Mínimo 1€ por día
+                  </p>
+                </div>
+
+                {/* Sección de estimación */}
+                <div className="builder-field builder-field-full">
+                  <div className="builder-estimation-card">
+                    <h4 className="builder-estimation-title">
+                      <i className="fas fa-chart-line" />
+                      Estimación de rendimiento
+                    </h4>
+                    
+                    {estimation.loading ? (
+                      <div className="builder-estimation-loading">
+                        <div className="builder-spinner"></div>
+                        <span>Calculando estimación...</span>
+                      </div>
+                    ) : estimation.error ? (
+                      <div className="builder-estimation-error">
+                        <i className="fas fa-exclamation-triangle" />
+                        {estimation.error}
+                      </div>
+                    ) : estimation.data ? (
+                      <div className="builder-estimation-grid">
+                        <div className="builder-estimation-item">
+                          <div className="builder-estimation-value">
+                            {Math.round(estimation.data.estimatedImpressions).toLocaleString()}
+                          </div>
+                          <div className="builder-estimation-label">Impresiones/día</div>
+                          <div className="builder-estimation-detail">CPM: {estimation.data.cpm}€</div>
+                        </div>
+                        <div className="builder-estimation-item">
+                          <div className="builder-estimation-value">
+                            {estimation.data.estimatedClicks.toLocaleString()}
+                          </div>
+                          <div className="builder-estimation-label">Clics estimados/día</div>
+                          <div className="builder-estimation-detail">CTR: ~2%</div>
+                        </div>
+                        <div className="builder-estimation-item">
+                          <div className="builder-estimation-value">
+                            {estimation.data.estimatedCPC}€
+                          </div>
+                          <div className="builder-estimation-label">Coste por clic (CPC)</div>
+                          <div className="builder-estimation-detail">Estimado</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="builder-estimation-placeholder">
+                        <i className="fas fa-info-circle" />
+                        Establece un presupuesto para ver las estimaciones
+                      </div>
+                    )}
+
+                    <div className="builder-estimation-total">
+                      <strong>Presupuesto total estimado:</strong>{' '}
+                      {(dailyBudget * campaignDuration).toFixed(2)}€ ({campaignDuration} días)
+                    </div>
                   </div>
                 </div>
               </div>

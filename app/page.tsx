@@ -85,10 +85,25 @@ function LandingPublica() {
 
 function Dashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { status, lastLandingSlug, lastAdId } = useGeneration();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [loadingExperiments, setLoadingExperiments] = useState(true);
+  const [metrics, setMetrics] = useState({
+    totalViews: 0,
+    totalClicks: 0,
+    totalWaitlist: 0,
+    loading: true
+  });
+  const [waitlistModal, setWaitlistModal] = useState<{
+    isOpen: boolean;
+    waitlist: any[];
+    experimentName: string;
+  }>({
+    isOpen: false,
+    waitlist: [],
+    experimentName: ""
+  });
 
   useEffect(() => {
     async function fetchExperiments() {
@@ -102,8 +117,117 @@ function Dashboard() {
 
         if (error) {
           console.error("Error fetching experiments:", error);
-        } else {
-          setExperiments(data || []);
+        } else if (data) {
+          // Para cada experimento, cargar métricas y waitlist por separado
+          const experimentsWithDetails = await Promise.all(
+            data.map(async (experiment: any) => {
+              console.log("Procesando experimento:", experiment.id, experiment.idea_name);
+              
+              // Cargar métricas si tiene ad_id
+              let metrics: any = null;
+              if (experiment.ad_id) {
+                try {
+                  console.log("Cargando métricas para ad_id:", experiment.ad_id);
+                  const res = await fetch(`/api/getAdMetrics?adId=${experiment.ad_id}`);
+                  const metricsData = await res.json();
+                  console.log("Respuesta métricas:", metricsData);
+                  
+                  if (metricsData.success && metricsData.data) {
+                    // Mapear los campos de Meta a nuestro formato
+                    metrics = {
+                      views: parseInt(metricsData.data.impressions) || 0,
+                      clicks: parseInt(metricsData.data.clicks) || 0,
+                      spend: parseFloat(metricsData.data.spend) || 0,
+                      reach: parseInt(metricsData.data.reach) || 0,
+                      ctr: parseFloat(metricsData.data.ctr) || 0,
+                      cpc: parseFloat(metricsData.data.cpc) || 0,
+                      frequency: parseFloat(metricsData.data.frequency) || 0,
+                      waitlist: 0 // Temporal, se actualizará después de cargar waitlist
+                    };
+                    console.log("Métricas mapeadas:", metrics);
+                  } else {
+                    // Si no hay datos de Meta, usar métricas por defecto
+                    metrics = {
+                      views: 0,
+                      clicks: 0,
+                      spend: 0,
+                      reach: 0,
+                      ctr: 0,
+                      cpc: 0,
+                      frequency: 0,
+                      waitlist: 0 // Temporal, se actualizará después
+                    };
+                    console.log("Usando métricas por defecto (sin datos de Meta)");
+                  }
+                } catch (err) {
+                  console.error("Error fetching metrics for experiment:", experiment.id, err);
+                  // Métricas por defecto en caso de error
+                  metrics = {
+                    views: 0,
+                    clicks: 0,
+                    spend: 0,
+                    reach: 0,
+                    ctr: 0,
+                    cpc: 0,
+                    frequency: 0,
+                    waitlist: 0 // Temporal, se actualizará después
+                  };
+                }
+              } else {
+                console.log("Experimento sin ad_id, usando métricas por defecto");
+                // Métricas por defecto si no hay ad_id
+                metrics = {
+                  views: 0,
+                  clicks: 0,
+                  spend: 0,
+                  reach: 0,
+                  ctr: 0,
+                  cpc: 0,
+                  frequency: 0,
+                  waitlist: 0 // Temporal, se actualizará después
+                };
+              }
+
+              // Cargar waitlist si tiene slug
+              const waitlist: any[] = [];
+              if (experiment.slug) {
+                try {
+                  console.log("Cargando waitlist para slug:", experiment.slug);
+                  const { data: waitlistData, error: waitlistError } = await supabase
+                    .from("waitlist_entries")
+                    .select("email, name, created_at")
+                    .eq("slug", experiment.slug)
+                    .order("created_at", { ascending: false });
+
+                  console.log("Respuesta waitlist:", { waitlistData, waitlistError });
+                  if (!waitlistError && waitlistData) {
+                    waitlist.push(...waitlistData);
+                    console.log("Waitlist cargada:", waitlist.length, "entradas");
+                  }
+                } catch (err) {
+                  console.error("Error fetching waitlist for experiment:", experiment.id, err);
+                }
+              } else {
+                console.log("Experimento sin slug, omitiendo waitlist");
+              }
+
+              // Actualizar waitlist en las métricas después de cargarla
+              if (metrics) {
+                metrics.waitlist = waitlist.length;
+                console.log("Métricas actualizadas con waitlist:", metrics);
+              }
+
+              const result = {
+                ...experiment,
+                metrics: metrics,
+                waitlist: waitlist
+              };
+              console.log("Resultado final para experimento:", result);
+              return result;
+            })
+          );
+
+          setExperiments(experimentsWithDetails);
         }
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -115,6 +239,76 @@ function Dashboard() {
     fetchExperiments();
   }, [user, status]);
 
+  const getStatusDisplay = () => {
+    switch (status) {
+      case "processing":
+        return (
+          <div className="status-indicator status-processing">
+            <div className="builder-spinner"></div>
+            <span>Generando tu experimento...</span>
+          </div>
+        );
+      case "error":
+        return (
+          <div className="status-indicator status-error">
+            <i className="fas fa-exclamation-triangle"></i>
+            <span>Hubo un error en la generación</span>
+          </div>
+        );
+      case "completed":
+        return (
+          <div className="status-indicator status-success">
+            <i className="fas fa-check-circle"></i>
+            <span>¡Experimento creado con éxito!</span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const openWaitlistModal = (waitlist: any[], experimentName: string) => {
+    setWaitlistModal({
+      isOpen: true,
+      waitlist: waitlist,
+      experimentName: experimentName
+    });
+  };
+
+  const closeWaitlistModal = () => {
+    setWaitlistModal({
+      isOpen: false,
+      waitlist: [],
+      experimentName: ""
+    });
+  };
+
+  const copyEmailToClipboard = (email: string) => {
+    navigator.clipboard.writeText(email);
+    // Podríamos agregar un toast o notificación aquí
+  };
+
+  const downloadWaitlistCSV = () => {
+    const csvContent = [
+      ['Nombre', 'Email', 'Fecha de registro'],
+      ...waitlistModal.waitlist.map(entry => [
+        entry.name || 'Sin nombre',
+        entry.email,
+        new Date(entry.created_at).toLocaleDateString('es-ES')
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `waitlist_${waitlistModal.experimentName}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="dash-page">
       <div className="dash-shell">
@@ -124,35 +318,31 @@ function Dashboard() {
               <i className="fas fa-user" />
             </div>
             <div className="dash-user-info">
-              <p className="dash-user-name">Tu cuenta</p>
+              <p className="dash-user-name">{user?.email?.split('@')[0]}</p>
               <p className="dash-user-email">{user?.email}</p>
             </div>
+            <button 
+              className="dash-logout-button"
+              type="button"
+              onClick={logout}
+              title="Cerrar sesión"
+            >
+              <i className="fas fa-sign-out-alt" />
+            </button>
           </div>
 
           <nav className="dash-nav">
             <button className="dash-nav-item dash-nav-item-active" type="button">
-              <i className="fas fa-columns" />
-              <span>Panel de validación</span>
+              <i className="fas fa-home" />
+              <span>Panel principal</span>
             </button>
             <button
               className="dash-nav-item"
               type="button"
               onClick={() => router.push("/builder")}
             >
-              <i className="fas fa-magic" />
+              <i className="fas fa-rocket" />
               <span>Nuevo experimento</span>
-            </button>
-            <button className="dash-nav-item" type="button" disabled>
-              <i className="fas fa-flask" />
-              <span>Experimentos</span>
-            </button>
-            <button className="dash-nav-item" type="button" disabled>
-              <i className="fas fa-chart-line" />
-              <span>Métricas</span>
-            </button>
-            <button className="dash-nav-item" type="button" disabled>
-              <i className="fas fa-cog" />
-              <span>Configuración</span>
             </button>
           </nav>
         </aside>
@@ -160,93 +350,207 @@ function Dashboard() {
         <main className="dash-main">
           <header className="dash-header">
             <div>
-              <h1 className="dash-title">Panel de validación</h1>
+              <h1 className="dash-title">Bienvenido de nuevo</h1>
               <p className="dash-subtitle">
-                Crea nuevos experimentos y revisa el estado de tus validaciones.
+                Crea nuevos experimentos y valida tus ideas con datos reales
               </p>
+              {getStatusDisplay()}
             </div>
           </header>
 
           <div className="dash-grid">
-            {/* Nuevo experimento */}
-            <section className="dash-card dash-card-primary">
-              <div className="dash-card-body">
-                <h2 className="dash-card-title">Nuevo experimento</h2>
-                <p className="dash-card-text">
-                  Genera una nueva landing y, si lo deseas, su anuncio asociado en un flujo guiado.
-                </p>
-              </div>
-              <div className="dash-card-footer">
-                <button
-                  type="button"
-                  className="dash-card-button-primary"
-                  onClick={() => router.push("/builder")}
-                >
-                  <i className="fas fa-plus" />
-                  Crear experimento
-                </button>
-              </div>
-            </section>
-
             {/* Estado de experimentos */}
             <section className="dash-card">
               <div className="dash-card-body">
-                <h2 className="dash-card-title">Estado de experimentos</h2>
-
-                {status === "processing" && (
-                  <p className="dash-card-text" style={{ color: "#2563eb" }}>
-                    Generando tu experimento...
-                  </p>
-                )}
-
-                {status === "error" && (
-                  <p className="dash-card-text" style={{ color: "#dc2626" }}>
-                    Hubo un error en la generación.
-                  </p>
-                )}
-
+                <div className="dash-card-badge">
+                  <i className="fas fa-history"></i>
+                  <span>Tus proyectos</span>
+                </div>
+                <h2 className="dash-card-title">Experimentos recientes</h2>
+                
                 {loadingExperiments ? (
-                  <p className="dash-card-text">Cargando experimentos...</p>
+                  <div className="loading-skeleton" style={{ height: "120px", borderRadius: "12px" }}></div>
                 ) : experiments.length === 0 ? (
-                  <p className="dash-card-text">
-                    Aún no has creado ningún experimento.
-                  </p>
+                  <div style={{ textAlign: "center", padding: "2rem 0" }}>
+                    <i className="fas fa-inbox" style={{ fontSize: "3rem", color: "#cbd5e1", marginBottom: "1rem" }}></i>
+                    <p className="dash-card-text">
+                      Aún no has creado ningún experimento.
+                    </p>
+                    <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginTop: "0.5rem" }}>
+                      Tu primer proyecto está a un clic de distancia.
+                    </p>
+                  </div>
                 ) : (
-                  <ul className="dash-card-list">
-                    {experiments.map((exp) => (
-                      <li key={exp.id} style={{ marginBottom: "1rem" }}>
-                        <div className="flex justify-between items-start">
+                  <div className="dash-card-list">
+                    {experiments.slice(0, 5).map((exp) => (
+                      <div key={exp.id} className="experiment-card-expanded">
+                        {/* Header del experimento */}
+                        <div className="experiment-card-header">
                           <div>
-                            <strong>{exp.idea_name}</strong>
-                            <br />
-                            <span style={{ fontSize: "0.9rem", color: "#666" }}>
-                              {new Date(exp.created_at).toLocaleDateString()}
-                            </span>
+                            <div className="experiment-card-title">{exp.idea_name}</div>
+                            <div className="experiment-card-date">
+                              <i className="fas fa-calendar" style={{ marginRight: "0.5rem" }}></i>
+                              {new Date(exp.created_at).toLocaleDateString('es-ES', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </div>
                           </div>
-                          <button
-                            onClick={() => router.push(`/experiment/${exp.slug}`)}
-                            className="dash-card-button-secondary"
-                            style={{ width: "auto", padding: "0.45rem 0.9rem" }}
-                          >
-                            Ver detalles
-                          </button>
+                          <div className="experiment-card-actions">
+                            {exp.slug && (
+                              <a 
+                                href={`/${exp.slug}`} 
+                                target="_blank" 
+                                rel="noreferrer" 
+                                className="experiment-card-landing-link-top"
+                              >
+                                <i className="fas fa-external-link-alt"></i>
+                                Ver landing
+                              </a>
+                            )}
+                            <div className="experiment-status">
+                              <span className={`status-badge ${exp.ad_id ? 'status-active' : 'status-inactive'}`}>
+                                {exp.ad_id ? 'Activo' : 'Solo landing'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        {exp.slug && (
-                          <div style={{ marginTop: "0.25rem" }}>
-                            <a href={`/${exp.slug}`} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontSize: "0.9rem" }}>
-                              Ver Landing &rarr;
-                            </a>
+                        
+                        {/* Métricas principales */}
+                        <div className="experiment-metrics">
+                          <div className="experiment-metric">
+                            <div className="experiment-metric-value">
+                              <i className="fas fa-eye" style={{ color: "#1e293b", marginRight: "0.5rem" }}></i>
+                              {exp.metrics?.views || 0}
+                            </div>
+                            <div className="experiment-metric-label">Views</div>
                           </div>
-                        )}
-                      </li>
+                          <div className="experiment-metric">
+                            <div className="experiment-metric-value">
+                              <i className="fas fa-mouse-pointer" style={{ color: "#334155", marginRight: "0.5rem" }}></i>
+                              {exp.metrics?.clicks || 0}
+                            </div>
+                            <div className="experiment-metric-label">Clicks</div>
+                          </div>
+                          <div className="experiment-metric">
+                            <div className="experiment-metric-value">
+                              <i className="fas fa-envelope" style={{ color: "#16a34a", marginRight: "0.5rem" }}></i>
+                              {exp.waitlist?.length || 0}
+                            </div>
+                            <div className="experiment-metric-label">Waitlist</div>
+                            {exp.waitlist && exp.waitlist.length > 0 && (
+                              <button 
+                                className="waitlist-metric-button"
+                                onClick={() => openWaitlistModal(exp.waitlist, exp.idea_name)}
+                                title="Ver lista completa"
+                              >
+                                <i className="fas fa-users"></i>
+                              </button>
+                            )}
+                          </div>
+                          <div className="experiment-metric">
+                            <div className="experiment-metric-value">
+                              <i className="fas fa-dollar-sign" style={{ color: "#f59e0b", marginRight: "0.5rem" }}></i>
+                              {exp.metrics?.spend || 0}€
+                            </div>
+                            <div className="experiment-metric-label">Invertido</div>
+                          </div>
+                        </div>
+
+                        {/* Sección expandida con detalles */}
+                        <div className="experiment-details-section">
+                          {/* Espacio para futuras secciones */}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                    {experiments.length > 5 && (
+                      <div style={{ textAlign: "center", marginTop: "1rem" }}>
+                        <button 
+                          className="dash-card-button-secondary" 
+                          style={{ width: "auto", padding: "0.5rem 1rem", fontSize: "0.9rem" }}
+                          disabled
+                        >
+                          Ver todos los experimentos ({experiments.length})
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </section>
           </div>
         </main>
       </div>
+
+      {/* Modal de Waitlist */}
+      {waitlistModal.isOpen && (
+        <div className="waitlist-modal-overlay" onClick={closeWaitlistModal}>
+          <div className="waitlist-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="waitlist-modal-header">
+              <h3 className="waitlist-modal-title">
+                <i className="fas fa-users" style={{ marginRight: "0.5rem", color: "#16a34a" }}></i>
+                Lista de espera - {waitlistModal.experimentName}
+              </h3>
+              <button className="waitlist-modal-close" onClick={closeWaitlistModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="waitlist-modal-actions">
+              <button className="waitlist-download-button" onClick={downloadWaitlistCSV}>
+                <i className="fas fa-download"></i>
+                Descargar CSV
+              </button>
+            </div>
+
+            <div className="waitlist-modal-content">
+              {waitlistModal.waitlist.length > 0 ? (
+                <div className="waitlist-table-container">
+                  <table className="waitlist-table">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Fecha de registro</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {waitlistModal.waitlist.map((entry: any, index: number) => (
+                        <tr key={index}>
+                          <td className="waitlist-name">{entry.name || "Sin nombre"}</td>
+                          <td className="waitlist-email">
+                            <button 
+                              className="waitlist-email-button"
+                              onClick={() => copyEmailToClipboard(entry.email)}
+                              title="Copiar email"
+                            >
+                              <i className="fas fa-copy"></i>
+                              {entry.email}
+                            </button>
+                          </td>
+                          <td className="waitlist-date">
+                            {new Date(entry.created_at).toLocaleDateString('es-ES', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="waitlist-modal-empty">
+                  <i className="fas fa-user-friends" style={{ fontSize: "3rem", color: "#cbd5e1", marginBottom: "1rem" }}></i>
+                  <p>No hay usuarios en la lista de espera</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

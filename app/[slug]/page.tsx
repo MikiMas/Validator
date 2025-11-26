@@ -12,23 +12,25 @@ function buildHtml(landing: any, slug: string) {
   return `
     <style>
         :root {
-            --primary: #0f172a;
-            --primary-light: #1f2937;
-            --secondary: #1d4ed8;
-            --secondary-light: #2563eb;
+            --primary: #1e293b;
+            --primary-light: #334155;
+            --secondary: #16a34a;
+            --secondary-light: #22c55e;
             --accent: #0ea5e9;
+            --accent-light: #38bdf8;
 
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-light: #94a3b8;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8fafc;
-            --bg-card: #ffffff;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.18), 0 4px 6px -2px rgba(15, 23, 42, 0.15);
-            --gradient: linear-gradient(135deg, #0f172a 0%, #1d4ed8 50%, #0ea5e9 100%);
+            --text-primary: #f8fafc;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-light: rgba(255, 255, 255, 0.6);
+            --bg-primary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.05);
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --border: rgba(255, 255, 255, 0.2);
+            --success: #16a34a;
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.3);
+            --gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --gradient-accent: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
         }
 
         * {
@@ -39,75 +41,106 @@ function buildHtml(landing: any, slug: string) {
         }
 
         body {
-            background-color: var(--bg-primary);
+            background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        .min-h-screen {
+        .landing-page {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
-        .flex-1 {
+        .landing-page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .hero-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1.5rem;
+            padding: 4rem 1.5rem;
+            position: relative;
+            z-index: 2;
         }
 
-        .max-w-3xl {
-            max-width: 48rem;
-        }
-
-        .mx-auto {
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .w-full {
+        .hero-content {
+            max-width: 64rem;
             width: 100%;
-        }
-
-        .text-center {
+            margin: 0 auto;
             text-align: center;
         }
 
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .hero-badge:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
         .hero-title {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 800;
             line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: var(--gradient);
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #f8fafc 0%, rgba(255, 255, 255, 0.8) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.02em;
+            animation: fadeInUp 0.8s ease;
         }
 
         .hero-description {
-            font-size: 1.25rem;
+            font-size: 1.375rem;
             color: var(--text-secondary);
             margin-bottom: 3rem;
             line-height: 1.7;
-            max-width: 36rem;
+            max-width: 42rem;
             margin-left: auto;
             margin-right: auto;
+            animation: fadeInUp 0.8s ease 0.2s both;
         }
 
         .waitlist-container {
             width: 100%;
-            max-width: 28rem;
+            max-width: 32rem;
             background: var(--bg-card);
-            padding: 2.5rem;
-            border-radius: 1.5rem;
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 24px;
             box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             overflow: hidden;
             margin: 0 auto;
+            animation: fadeInUp 0.8s ease 0.4s both;
         }
 
         .waitlist-container::before {
@@ -117,20 +150,52 @@ function buildHtml(landing: any, slug: string) {
             left: 0;
             right: 0;
             height: 4px;
-            background: var(--gradient);
+            background: var(--gradient-accent);
+        }
+
+        .waitlist-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .waitlist-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+        }
+
+        .waitlist-icon i {
+            color: white;
+            font-size: 1.5rem;
         }
 
         .waitlist-title {
-            font-size: 1.75rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             color: var(--primary);
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
         .waitlist-offer {
             color: var(--text-secondary);
             margin-bottom: 2rem;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            text-align: center;
+            line-height: 1.6;
         }
 
         .form-group {
@@ -139,48 +204,75 @@ function buildHtml(landing: any, slug: string) {
 
         .form-label {
             display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
             margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         .form-input {
             width: 100%;
-            padding: 0.875rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
             font-size: 1rem;
-            transition: all 0.2s ease;
-            background-color: var(--bg-primary);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            color: var(--primary);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
         }
 
         .form-input:focus {
             outline: none;
             border-color: var(--secondary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .form-button {
             width: 100%;
-            background: var(--gradient);
+            background: var(--gradient-accent);
             color: white;
             border: none;
-            border-radius: 0.75rem;
-            padding: 0.875rem 1.5rem;
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+        }
+
+        .form-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .form-button:hover::before {
+            left: 100%;
         }
 
         .form-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 15px 35px rgba(22, 163, 74, 0.4);
         }
 
         .form-button:active {
@@ -188,69 +280,129 @@ function buildHtml(landing: any, slug: string) {
         }
 
         .success-message {
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border: 1px solid rgba(22, 163, 74, 0.2);
             color: var(--success);
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-top: 1rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-top: 1.5rem;
             text-align: center;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1.1rem;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .success-message i {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
         }
 
         footer {
             padding: 2rem 1.5rem;
             text-align: center;
             color: var(--text-light);
-            font-size: 0.875rem;
-            background-color: var(--bg-secondary);
-            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 2;
         }
 
-        .floating-shapes {
+        .floating-elements {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            z-index: -1;
+            z-index: 1;
         }
 
-        .shape {
+        .floating-element {
             position: absolute;
             border-radius: 50%;
-            opacity: 0.05;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite ease-in-out;
         }
 
-        .shape-1 {
-            width: 200px;
-            height: 200px;
-            background: var(--secondary);
-            top: -100px;
-            right: -50px;
+        .element-1 {
+            width: 120px;
+            height: 120px;
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
         }
 
-        .shape-2 {
-            width: 150px;
-            height: 150px;
-            background: var(--accent);
-            bottom: -50px;
-            left: -50px;
+        .element-2 {
+            width: 80px;
+            height: 80px;
+            bottom: 20%;
+            left: 15%;
+            animation-delay: 3s;
+        }
+
+        .element-3 {
+            width: 60px;
+            height: 60px;
+            top: 30%;
+            left: 5%;
+            animation-delay: 6s;
+        }
+
+        .element-4 {
+            width: 100px;
+            height: 100px;
+            bottom: 10%;
+            right: 20%;
+            animation-delay: 9s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-20px) rotate(120deg);
+            }
+            66% {
+                transform: translateY(10px) rotate(240deg);
+            }
         }
 
         @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.25rem;
+            .hero-section {
+                padding: 2rem 1rem;
             }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
             .hero-description {
                 font-size: 1.125rem;
             }
+            
             .waitlist-container {
                 padding: 2rem;
             }
+            
             .waitlist-title {
-                font-size: 1.5rem;
+                font-size: 1.75rem;
             }
         }
 
@@ -258,29 +410,48 @@ function buildHtml(landing: any, slug: string) {
             .hero-title {
                 font-size: 2rem;
             }
+            
             .waitlist-container {
                 padding: 1.5rem;
+            }
+            
+            .hero-description {
+                font-size: 1rem;
             }
         }
     </style>
 
-    <main class="min-h-screen">
-        <div class="flex-1">
-            <div class="text-center max-w-3xl mx-auto w-full">
+    <main class="landing-page">
+        <div class="floating-elements">
+            <div class="floating-element element-1"></div>
+            <div class="floating-element element-2"></div>
+            <div class="floating-element element-3"></div>
+            <div class="floating-element element-4"></div>
+        </div>
+
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>Próximamente disponible</span>
+                </div>
+                
                 <h1 class="hero-title">
                     ${heroTitle}
                 </h1>
+                
                 <p class="hero-description">
                     ${heroDescription}
                 </p>
 
                 <div class="waitlist-container">
-                    <div class="floating-shapes">
-                        <div class="shape shape-1"></div>
-                        <div class="shape shape-2"></div>
+                    <div class="waitlist-icon">
+                        <i class="fas fa-rocket"></i>
                     </div>
+                    
                     <h2 class="waitlist-title">${waitlistTitle}</h2>
                     <p class="waitlist-offer">${waitlistOffer}</p>
+                    
                     <form class="waitlist-form">
                         <div class="form-group">
                             <label for="name" class="form-label">Nombre completo</label>
@@ -295,18 +466,31 @@ function buildHtml(landing: any, slug: string) {
                             Unirme a la lista
                         </button>
                     </form>
+                    
                     <div class="success-message" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
                         ¡Gracias por unirte! Te hemos enviado un correo de confirmación.
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+        
         <footer>
             <p>&copy; ${year} ${heroTitle}. Todos los derechos reservados.</p>
         </footer>
     </main>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Set dynamic page title
+            var heroTitleElement = document.querySelector('.hero-title');
+            if (heroTitleElement) {
+                var pageTitle = heroTitleElement.textContent.trim();
+                if (pageTitle && pageTitle !== 'Revoluciona tu Experiencia Digital') {
+                    document.title = pageTitle;
+                }
+            }
+            
             var form = document.querySelector('.waitlist-form');
             var successMessage = document.querySelector('.success-message');
             if (!form || !successMessage) return;
@@ -320,6 +504,12 @@ function buildHtml(landing: any, slug: string) {
 
                 if (!email) return;
 
+                // Add loading state
+                var submitButton = form.querySelector('.form-button');
+                var originalContent = submitButton.innerHTML;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                submitButton.disabled = true;
+
                 try {
                     var res = await fetch('/api/waitlist', {
                         method: 'POST',
@@ -330,22 +520,61 @@ function buildHtml(landing: any, slug: string) {
                     if (res.ok) {
                         form.style.display = 'none';
                         successMessage.style.display = 'block';
+                        
+                        // Confetti effect (simple implementation)
+                        createConfetti();
                     } else {
-                        console.error('Error al enviar el formulario');
+                        throw new Error('Error al enviar el formulario');
                     }
                 } catch (error) {
                     console.error('Error al enviar el formulario:', error);
+                    // Reset button on error
+                    submitButton.innerHTML = originalContent;
+                    submitButton.disabled = false;
+                    alert('Hubo un error al enviar tu solicitud. Por favor, inténtalo de nuevo.');
                 }
             });
         });
+
+        // Simple confetti effect
+        function createConfetti() {
+            var colors = ['#16a34a', '#22c55e', '#1e293b', '#334155'];
+            var confettiCount = 50;
+            
+            for (var i = 0; i < confettiCount; i++) {
+                var confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-20px';
+                confetti.style.borderRadius = '50%';
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.animation = 'fall ' + (Math.random() * 2 + 2) + 's linear';
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(function() {
+                    confetti.remove();
+                }, 4000);
+            }
+        }
+
+        // Add falling animation
+        var style = document.createElement('style');
+        var cssText = '@keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }';
+        style.textContent = cssText;
+        document.head.appendChild(style);
     </script>
   `;
-}
+}        // ← AGREGAR ESTO en línea 572
 
 export default async function Landing({ params }: any) {
   const { data, error } = await supabase
     .from("ideas")
-    .select("landing")
+    .select("landing, idea_name")
     .eq("slug", params.slug)
     .single();
 
@@ -354,6 +583,12 @@ export default async function Landing({ params }: any) {
   }
 
   const landing = (data as any).landing;
+  const ideaName = (data as any).idea_name;
 
-  return <div dangerouslySetInnerHTML={{ __html: buildHtml(landing, params.slug) }} />;
+  return (
+    <>
+      <title>{ideaName || "Landing"}</title>
+      <div dangerouslySetInnerHTML={{ __html: buildHtml(landing, params.slug) }} />
+    </>
+  );
 }
