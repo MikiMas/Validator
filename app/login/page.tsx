@@ -79,9 +79,6 @@ export default function LoginPage() {
               <div className="auth-logo-icon">V</div>
               <span className="auth-logo-text">Validator</span>
             </div>
-            <a href="/register" className="auth-link-inline">
-              Crear cuenta
-            </a>
           </div>
 
           <div>
@@ -142,18 +139,6 @@ export default function LoginPage() {
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
 
-            <div className="auth-separator">O continúa con</div>
-
-            <div className="auth-social-grid">
-              <button type="button" className="auth-social-button">
-                <i className="fab fa-google" />
-                Google
-              </button>
-              <button type="button" className="auth-social-button">
-                <i className="fab fa-facebook" />
-                Facebook
-              </button>
-            </div>
           </form>
 
           <p className="auth-footer-text">

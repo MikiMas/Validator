@@ -79,9 +79,6 @@ export default function RegisterPage() {
               <div className="auth-logo-icon">V</div>
               <span className="auth-logo-text">Validator</span>
             </div>
-            <a href="/login" className="auth-link-inline">
-              Iniciar sesión
-            </a>
           </div>
 
           <div>
@@ -143,18 +140,6 @@ export default function RegisterPage() {
               {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
             </button>
 
-            <div className="auth-separator">O regístrate con</div>
-
-            <div className="auth-social-grid">
-              <button type="button" className="auth-social-button">
-                <i className="fab fa-google" />
-                Google
-              </button>
-              <button type="button" className="auth-social-button">
-                <i className="fab fa-facebook" />
-                Facebook
-              </button>
-            </div>
           </form>
 
           <p className="auth-footer-text">

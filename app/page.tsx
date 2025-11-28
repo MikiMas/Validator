@@ -318,7 +318,6 @@ function Dashboard() {
               <i className="fas fa-user" />
             </div>
             <div className="dash-user-info">
-              <p className="dash-user-name">{user?.email?.split('@')[0]}</p>
               <p className="dash-user-email">{user?.email}</p>
             </div>
             <button 
@@ -363,7 +362,7 @@ function Dashboard() {
             <section className="dash-card">
               <div className="dash-card-body">
                 <div className="dash-card-badge">
-                  <i className="fas fa-history"></i>
+                  <i className="fas fa-history" style={{ marginRight: "0.5rem" }}></i>
                   <span>Tus proyectos</span>
                 </div>
                 <h2 className="dash-card-title">Experimentos recientes</h2>
