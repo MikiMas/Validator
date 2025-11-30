@@ -1,7 +1,16 @@
 import axios from "axios";
+import { getUserFromRequest } from "@/lib/authServer";
 
 export async function POST(req) {
     try {
+        const authUser = await getUserFromRequest(req);
+        if (!authUser) {
+            return new Response(
+                JSON.stringify({ error: "No autorizado" }),
+                { status: 401 }
+            );
+        }
+
         const body = await req.json();
 
         const {

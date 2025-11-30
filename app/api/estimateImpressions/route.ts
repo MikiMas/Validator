@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/authServer";
 
 const MIN_DAILY_BUDGET = 1; // €
 const MAX_CAMPAIGN_DAYS = 90;
@@ -7,6 +8,14 @@ const ESTIMATED_CTR = 0.02; // 2%
 
 export async function POST(req: Request) {
   try {
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) {
+      return NextResponse.json(
+        { success: false, error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { dailyBudget } = await req.json();
 
     if (!dailyBudget || isNaN(dailyBudget) || dailyBudget < MIN_DAILY_BUDGET) {

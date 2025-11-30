@@ -5,11 +5,11 @@ import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export type AuthUser = User;
 
-export function subscribeAuth(callback: (user: User | null) => void) {
+export function subscribeAuth(callback: (user: User | null, accessToken: string | null) => void) {
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((_: AuthChangeEvent, session: Session | null) => {
-    callback(session?.user ?? null);
+    callback(session?.user ?? null, session?.access_token ?? null);
   });
 
   return () => {

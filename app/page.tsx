@@ -85,7 +85,7 @@ function LandingPublica() {
 
 function Dashboard() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, accessToken } = useAuth();
   const { status, lastLandingSlug, lastAdId } = useGeneration();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [loadingExperiments, setLoadingExperiments] = useState(true);
@@ -128,7 +128,9 @@ function Dashboard() {
               if (experiment.ad_id) {
                 try {
                   console.log("Cargando métricas para ad_id:", experiment.ad_id);
-                  const res = await fetch(`/api/getAdMetrics?adId=${experiment.ad_id}`);
+                  const res = await fetch(`/api/getAdMetrics?adId=${experiment.ad_id}`, {
+                    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
+                  });
                   const metricsData = await res.json();
                   console.log("Respuesta métricas:", metricsData);
                   
@@ -237,7 +239,7 @@ function Dashboard() {
     }
 
     fetchExperiments();
-  }, [user, status]);
+  }, [user, status, accessToken]);
 
   const getStatusDisplay = () => {
     switch (status) {

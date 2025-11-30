@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
+import { getUserFromRequest } from "@/lib/authServer";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const adId = searchParams.get("adId");
+
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) {
+        return NextResponse.json(
+            { success: false, error: "No autorizado" },
+            { status: 401 }
+        );
+    }
 
     if (!adId) {
         return NextResponse.json(

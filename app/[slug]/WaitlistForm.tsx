@@ -82,7 +82,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
       <style jsx>{`
         .waitlist-section {
           padding: 4rem 1.5rem;
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          background: "var(--bg-light)";
           position: relative;
           overflow: hidden;
           min-height: 100vh;
@@ -92,15 +92,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         }
 
         .waitlist-section::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-          pointer-events: none;
-          z-index: 1;
+          display: none;
         }
 
         .container {
@@ -111,12 +103,11 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         }
 
         .waitlist-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 24px;
-          padding: 3rem;
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: "var(--surface)";
+          border-radius: "var(--radius)";
+          padding: "2.5rem 2rem";
+          box-shadow: "var(--shadow-lg)";
+          border: "1px solid #e5e7eb";
           position: relative;
           overflow: hidden;
           animation: fadeInUp 0.8s ease;
@@ -128,51 +119,35 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
           top: 0;
           left: 0;
           right: 0;
-          height: 4px;
-          background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-        }
-
-        .waitlist-card::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 200%;
-          height: 200%;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-          transform: translate(-50%, -50%);
-          pointer-events: none;
+          height: "4px";
+          background: "var(--primary)";
         }
 
         .waitlist-icon {
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-          border-radius: 20px;
+          width: 56px;
+          height: 56px;
+          background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 2rem;
-          box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
-        }
-
-        .waitlist-icon svg {
           color: white;
-          font-size: 2rem;
+          font-size: 1.75rem;
         }
 
         .waitlist-title {
-          font-size: 2.5rem;
-          font-weight: 800;
-          color: #1e293b;
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--text-dark);
           margin-bottom: 1rem;
           text-align: center;
-          line-height: 1.1;
+          line-height: 1.2;
         }
 
         .waitlist-description {
-          color: #64748b;
-          margin-bottom: 2.5rem;
+          color: var(--text-light);
+          margin-bottom: 2rem;
           text-align: center;
           font-size: 1.125rem;
           line-height: 1.6;
@@ -181,7 +156,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         .waitlist-form {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.25rem;
         }
 
         .form-group {
@@ -193,72 +168,54 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         .form-label {
           font-size: 0.9rem;
           font-weight: 600;
-          color: #1e293b;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
+          color: var(--text-dark);
+          display: block;
+          margin-bottom: 0.35rem;
         }
 
         .form-input {
           width: 100%;
-          padding: 1rem 1.25rem;
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          border-radius: 16px;
-          font-size: 1rem;
-          transition: all 0.3s ease;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(10px);
-          color: #1e293b;
+          padding: 0.85rem 1rem;
+          border: 2px solid #e5e7eb;
+          border-radius: var(--radius);
+          font-size: 0.95rem;
+          transition: var(--transition);
+          background: var(--surface);
+          color: var(--text-dark);
         }
 
         .form-input::placeholder {
-          color: #94a3b8;
+          color: #9ca3af;
         }
 
         .form-input:focus {
           outline: none;
-          border-color: #16a34a;
-          box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
-          background: rgba(255, 255, 255, 0.95);
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+          background: var(--surface);
         }
 
         .submit-button {
           width: 100%;
-          background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+          background: var(--primary);
           color: white;
           border: none;
-          border-radius: 16px;
-          padding: 1rem 1.5rem;
-          font-size: 1rem;
-          font-weight: 700;
+          border-radius: var(--radius);
+          padding: 1rem 2rem;
+          font-size: 1.125rem;
+          font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: var(--transition);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.75rem;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
-        }
-
-        .submit-button::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.6s ease;
-        }
-
-        .submit-button:hover::before {
-          left: 100%;
+          text-decoration: none;
         }
 
         .submit-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 15px 35px rgba(22, 163, 74, 0.4);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow);
         }
 
         .submit-button:active {
@@ -272,72 +229,28 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         }
 
         .success-message {
-          background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
-          border: 1px solid rgba(22, 163, 74, 0.2);
-          color: #16a34a;
-          padding: 1.5rem;
-          border-radius: 16px;
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+          border: 1px solid rgba(34, 197, 94, 0.2);
+          color: var(--accent);
+          padding: 1rem;
+          border-radius: var(--radius);
           text-align: center;
           font-weight: 600;
-          font-size: 1.1rem;
-          backdrop-filter: blur(10px);
+          font-size: 0.9rem;
           animation: fadeInUp 0.5s ease;
         }
 
         .error-message {
-          background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.1) 100%);
-          border: 1px solid rgba(239, 68, 68, 0.2);
+          background: #fee2e2;
           color: #dc2626;
-          padding: 1rem;
-          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          border-radius: var(--radius);
           text-align: center;
           font-weight: 500;
-          backdrop-filter: blur(10px);
+          border: 1px solid #fecaca;
         }
 
-        .floating-elements {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          z-index: 1;
-        }
-
-        .floating-element {
-          position: absolute;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          animation: float 20s infinite ease-in-out;
-        }
-
-        .element-1 {
-          width: 120px;
-          height: 120px;
-          top: 10%;
-          right: 10%;
-          animation-delay: 0s;
-        }
-
-        .element-2 {
-          width: 80px;
-          height: 80px;
-          bottom: 20%;
-          left: 15%;
-          animation-delay: 3s;
-        }
-
-        .element-3 {
-          width: 60px;
-          height: 60px;
-          top: 30%;
-          left: 5%;
-          animation-delay: 6s;
-        }
-
+        
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -346,25 +259,6 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          33% {
-            transform: translateY(-20px) rotate(120deg);
-          }
-          66% {
-            transform: translateY(10px) rotate(240deg);
-          }
-        }
-
-        @keyframes fall {
-          to {
-            transform: translateY(100vh) rotate(360deg);
-            opacity: 0;
           }
         }
 
@@ -398,12 +292,6 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
       `}</style>
 
       <section id="waitlist" className="waitlist-section">
-        <div className="floating-elements">
-          <div className="floating-element element-1"></div>
-          <div className="floating-element element-2"></div>
-          <div className="floating-element element-3"></div>
-        </div>
-
         <div className="container">
           <div className="waitlist-card">
             <div className="waitlist-icon">

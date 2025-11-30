@@ -1,16 +1,20 @@
 // app/api/generateLanding/route.ts
 import { NextResponse } from "next/server";
-import { openai } from "@/lib/openai";
 import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
+import { getUserFromRequest } from "@/lib/authServer";
 
 export async function POST(req: Request) {
   try {
-    const { 
-      ideaName, 
-      ideaDescription, 
-      waitlistOffer, 
-      userId,
+    const {
+      mode = "landing-only",
+      ideaName,
+      ideaDescription,
+      waitlistOffer,
+      landingTitle,
+      landingDescription,
+      landingWaitlistText,
+      customSlug,
       // Campaign settings
       campaignSettings = {
         durationDays: 7,
@@ -23,6 +27,14 @@ export async function POST(req: Request) {
       adPicture
     } = await req.json();
 
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+    const isCombo = mode === "combo";
+
+    const authUser = await getUserFromRequest(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 401 });
+    }
+
     if (!ideaName || !ideaDescription) {
       return NextResponse.json(
         { success: false, error: "Faltan campos requeridos: ideaName o ideaDescription" },
@@ -30,103 +42,107 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generar slug único
-    const slug = ideaName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      + "-" + nanoid(4);
+    const baseSlug =
+      (customSlug || ideaName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || nanoid(6);
 
-    // PROMPT IA
-    const prompt = `
-Actúa como un experto en copywriting para landing pages minimalistas de validación (MVP).
-Tu objetivo es crear el contenido para una landing muy simple que busca captar emails para una waitlist.
+    // Evitar duplicados: si el slug existe, devolver error (solo cuando el usuario lo elige)
+    const desiredSlug = customSlug ? baseSlug : `${baseSlug}-${nanoid(4)}`;
+    if (customSlug) {
+      const { data: existing, error: existError } = await supabase
+        .from("ideas")
+        .select("slug")
+        .eq("slug", desiredSlug)
+        .single();
 
-DATOS DEL PROYECTO (texto escrito por el usuario, NO inventes información adicional):
-- Nombre: ${ideaName}
-- Descripción libre del usuario: ${ideaDescription}
-- Oferta para la Waitlist: ${waitlistOffer} (Ej: "50% descuento", "Acceso anticipado", etc.)
+      const notFound = existError && (existError.code === "PGRST116" || existError.code === "PGRST106");
 
-PRIMERO, interpreta la descripción del usuario como una explicación del problema que resuelve, para quién es y cómo lo soluciona.
-Si hay partes ambiguas, NO rellenes con detalles inventados: mantén la descripción general.
+      if (existError && !notFound) {
+        console.error("Error comprobando slug existente:", existError);
+        return NextResponse.json(
+          { success: false, error: "No se pudo verificar la disponibilidad del slug" },
+          { status: 500 }
+        );
+      }
 
-INSTRUCCIONES DE ESTILO:
-- Sé directo, claro y persuasivo.
-- Estilo "Serious SaaS": profesional, minimalista, sin florituras.
-- Usa solo la información que aparece en los datos del proyecto.
-- No inventes funcionalidades, promesas ni detalles técnicos que el usuario no haya mencionado explícitamente.
+      if (existing) {
+        return NextResponse.json(
+          { success: false, error: "La URL ya está en uso, elige otra" },
+          { status: 409 }
+        );
+      }
+    }
 
-SALIDA:
-Genera un JSON con EXACTAMENTE esta estructura y sin texto adicional fuera del JSON:
-{
-  "heroTitle": "",          // Título principal (H1) - Impactante y claro, basado SOLO en los datos
-  "heroDescription": "",    // Descripción (P) - Explicación completa pero concisa de qué hace, para quién es y por qué debería apuntarse a la waitlist (3-6 frases, sin inventar información)
-  "waitlistTitle": "",      // Título de la sección de waitlist (Ej: "Únete a la lista de espera")
-  "waitlistOffer": ""       // Texto persuasivo sobre la oferta, sin añadir beneficios que no se mencionen
-}
-`;
+    const slug = desiredSlug;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "system", content: prompt }],
-    });
-
-    const jsonText = completion.choices[0].message.content!;
-    const landingContent = JSON.parse(jsonText);
+    // Contenido basado exactamente en lo escrito por el usuario (sin IA)
+    const landingContent = {
+      heroTitle: landingTitle || ideaName,
+      heroDescription: landingDescription || ideaDescription,
+      waitlistTitle: landingWaitlistText || "Únete a la lista de espera",
+      waitlistOffer: waitlistOffer || ""
+    };
 
     // Guardar en Supabase (tabla 'ideas')
-    const { data: insertedIdea, error } = await supabase
-      .from("ideas")
-      .insert({
-        slug,
-        idea_name: ideaName,
-        idea_description: ideaDescription,
-        landing: landingContent,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        // Guardar configuración de campaña
-        campaign_settings: campaignSettings,
-        ad_creative: {
-          headline: adHeadline,
-          message: adMessage,
-          picture: adPicture
-        }
-      });
+    const ideaRecord: Record<string, any> = {
+      slug,
+      idea_name: ideaName,
+      idea_description: ideaDescription,
+      landing: landingContent,
+      user_id: authUser.id,
+      created_at: new Date().toISOString()
+    };
+
+    if (isCombo && campaignSettings) {
+      ideaRecord.campaign_settings = campaignSettings;
+    }
+
+    if (isCombo && (adHeadline || adMessage || adPicture)) {
+      ideaRecord.ad_creative = {
+        headline: adHeadline,
+        message: adMessage,
+        picture: adPicture
+      };
+    }
+
+    const { data: insertedIdea, error } = await supabase.from("ideas").insert(ideaRecord);
 
     if (error) {
       console.error("Error inserting idea in Supabase", error);
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     // Si se proporcionaron datos de campaña, crear el anuncio automáticamente
     let adData = null;
-    if (campaignSettings && adHeadline) {
+    if (isCombo && campaignSettings && adHeadline) {
       try {
-        const adRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/createMetaAd`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/${slug}`,
-            projectName: ideaName,
-            picture: adPicture,
-            message: adMessage,
-            adName: `Ad - ${ideaName}`,
-            callToActionType: "SIGN_UP",
-            campaignSettings: campaignSettings
-          })
-        });
-        
+        const adRes = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/createMetaAd`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(authHeader ? { Authorization: authHeader } : {})
+            },
+            body: JSON.stringify({
+              url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${slug}`,
+              projectName: ideaName,
+              picture: adPicture,
+              message: adMessage,
+              adName: `Ad - ${ideaName}`,
+              callToActionType: "SIGN_UP",
+              campaignSettings: campaignSettings
+            })
+          }
+        );
+
         if (adRes.ok) {
           adData = await adRes.json();
-          
+
           // Actualizar la idea con el ID del anuncio
-          await supabase
-            .from("ideas")
-            .update({ ad_id: adData.adId })
-            .eq("slug", slug);
+          await supabase.from("ideas").update({ ad_id: adData.adId }).eq("slug", slug);
         }
       } catch (adError) {
         console.error("Error creating ad:", adError);

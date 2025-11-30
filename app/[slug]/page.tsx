@@ -3,10 +3,21 @@ export const dynamic = "force-dynamic";
 import { supabase } from "@/lib/supabaseClient";
 
 function buildHtml(landing: any, slug: string) {
-  const heroTitle = landing.heroTitle ?? "Revoluciona tu Experiencia Digital";
-  const heroDescription = landing.heroDescription ?? "";
-  const waitlistTitle = landing.waitlistTitle || "Únete a la lista de espera";
-  const waitlistOffer = landing.waitlistOffer || "Sé el primero en acceder a nuestras funciones exclusivas y recibe un 20% de descuento en tu primer año.";
+  const escapeHtml = (value: unknown) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const heroTitle = escapeHtml(landing?.heroTitle ?? "Revoluciona tu Experiencia Digital");
+  const heroDescription = escapeHtml(landing?.heroDescription ?? "");
+  const waitlistTitle = escapeHtml(landing?.waitlistTitle || "Únete a la lista de espera");
+  const waitlistOffer = escapeHtml(
+    landing?.waitlistOffer ||
+      "Sé el primero en acceder a nuestras funciones exclusivas y recibe un 20% de descuento en tu primer año."
+  );
   const year = new Date().getFullYear();
 
   return `
@@ -130,11 +141,11 @@ function buildHtml(landing: any, slug: string) {
 
         .waitlist-container {
             width: 100%;
-            max-width: 32rem;
+            max-width: 34rem;
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             padding: 3rem;
-            border-radius: 24px;
+            border-radius: 28px;
             box-shadow: var(--shadow-lg);
             border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
@@ -198,30 +209,55 @@ function buildHtml(landing: any, slug: string) {
             line-height: 1.6;
         }
 
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
         .form-group {
-            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
         }
 
         .form-label {
-            display: block;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--primary);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0f172a;
+            opacity: 0.65;
+            pointer-events: none;
+            font-size: 0.95rem;
         }
 
         .form-input {
             width: 100%;
-            padding: 1rem 1.25rem;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
+            padding: 1rem 1.25rem 1rem 2.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-radius: 14px;
             font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.25s ease;
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
         .form-input::placeholder {
@@ -231,8 +267,8 @@ function buildHtml(landing: any, slug: string) {
         .form-input:focus {
             outline: none;
             border-color: var(--secondary);
-            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
-            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+            background: rgba(255, 255, 255, 1);
         }
 
         .form-button {
@@ -253,6 +289,19 @@ function buildHtml(landing: any, slug: string) {
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(22, 163, 74, 0.3);
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.05);
+            border-radius: 12px;
+            border: 1px dashed rgba(15, 23, 42, 0.1);
         }
 
         .form-button::before {
@@ -453,15 +502,35 @@ function buildHtml(landing: any, slug: string) {
                     <p class="waitlist-offer">${waitlistOffer}</p>
                     
                     <form class="waitlist-form">
-                        <div class="form-group">
-                            <label for="name" class="form-label">Nombre completo</label>
-                            <input type="text" id="name" class="form-input" placeholder="Tu nombre" required>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Nombre completo
+                                </label>
+                                <div class="input-wrap">
+                                    <span class="input-icon"><i class="fas fa-id-badge"></i></span>
+                                    <input type="text" id="name" class="form-input" placeholder="Tu nombre" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Correo electrónico
+                                </label>
+                                <div class="input-wrap">
+                                    <span class="input-icon"><i class="fas fa-at"></i></span>
+                                    <input type="email" id="email" class="form-input" placeholder="tu@email.com" required>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="email" class="form-label">Correo electrónico</label>
-                            <input type="email" id="email" class="form-input" placeholder="tu@email.com" required>
+
+                        <div class="form-footer">
+                            <i class="fas fa-shield-alt"></i>
+                            Usaremos tu correo solo para avisarte del lanzamiento. Sin spam.
                         </div>
-                        <button type="submit" class="form-button">
+
+                        <button type="submit" class="form-button" style="margin-top: 1.25rem;">
                             <i class="fas fa-paper-plane"></i>
                             Unirme a la lista
                         </button>
@@ -569,7 +638,7 @@ function buildHtml(landing: any, slug: string) {
         document.head.appendChild(style);
     </script>
   `;
-}        // ← AGREGAR ESTO en línea 572
+}
 
 export default async function Landing({ params }: any) {
   const { data, error } = await supabase

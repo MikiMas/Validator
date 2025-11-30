@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/authServer";
 
 const META_TOKEN = process.env.META_TOKEN;
 
 export async function GET(req: Request) {
+  const authUser = await getUserFromRequest(req);
+  if (!authUser) {
+    return NextResponse.json(
+      { success: false, error: "No autorizado" },
+      { status: 401 }
+    );
+  }
+
   if (!META_TOKEN) {
     return NextResponse.json(
       { success: false, error: "META_TOKEN is not configured" },
