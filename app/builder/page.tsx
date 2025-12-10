@@ -40,6 +40,9 @@ function MultiStepBuilder() {
   const [landingOfferText, setLandingOfferText] = useState("");
   const [hasLandingOffer, setHasLandingOffer] = useState(false);
 
+  // Estado para tema de color de la landing
+  const [landingTheme, setLandingTheme] = useState<"dark" | "light">("dark");
+
   // Estado para identificación interna del proyecto
   const [projectName, setProjectName] = useState("");
   const [projectSlug, setProjectSlug] = useState("");
@@ -195,17 +198,6 @@ function MultiStepBuilder() {
     }
   };
 
-  // Autogenerar slug desde el nombre si el usuario aún no lo tocó
-  useEffect(() => {
-    if (!projectSlug.trim() && projectName.trim()) {
-      const auto = projectName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-      setProjectSlug(auto);
-    }
-  }, [projectName, projectSlug]);
-
   // Validación de contenido de anuncio con IA
   const validateAdContent = async () => {
     if (!adHeadline.trim() || !adMessage.trim()) {
@@ -284,6 +276,7 @@ function MultiStepBuilder() {
 
   // Efecto para la estimación con debounce
   useEffect(() => {
+    if (!user) return;
     let isMounted = true;
     const timer = setTimeout(() => {
       if (dailyBudget >= 1 && isMounted) {
@@ -332,6 +325,7 @@ function MultiStepBuilder() {
           landingTitle,
           landingWaitlistText,
           customSlug: projectSlug,
+          landingTheme, // Añadir el tema seleccionado
           // Add campaign settings and ad content only for combo
           ...(projectType === "combo" && {
             campaignSettings: {
@@ -516,7 +510,11 @@ function MultiStepBuilder() {
                             placeholder="Ej: La revolucionaria app que cambia todo"
                             required
                             value={landingTitle}
-                            onChange={(e) => setLandingTitle(e.target.value)}
+                            onChange={(e) => {
+                      if (e.target.value.length <= 40) {
+                        setLandingTitle(e.target.value);
+                      }
+                    }}
                           />
                           <span className="builder-input-icon">
                             <i className="fas fa-heading" />
@@ -524,6 +522,14 @@ function MultiStepBuilder() {
                         </div>
                         <div className="builder-field-hint">
                           El título principal que verán los visitantes.
+                          <span style={{ 
+                            float: 'right', 
+                            color: landingTitle.length === 40 ? '#dc2626' : '#6b7280',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {landingTitle.length}/40
+                          </span>
                         </div>
                       </div>
 
@@ -539,7 +545,11 @@ function MultiStepBuilder() {
                             placeholder="Describe tu producto o servicio de forma clara y atractiva..."
                             required
                             value={landingDescription}
-                            onChange={(e) => setLandingDescription(e.target.value)}
+                            onChange={(e) => {
+                      if (e.target.value.length <= 600) {
+                        setLandingDescription(e.target.value);
+                      }
+                    }}
                             rows={6}
                           />
                           <span className="builder-input-icon">
@@ -548,6 +558,14 @@ function MultiStepBuilder() {
                         </div>
                         <div className="builder-field-hint">
                           Explica qué ofreces, para quién es y por qué es especial.
+                          <span style={{ 
+                            float: 'right', 
+                            color: landingDescription.length === 600 ? '#dc2626' : '#6b7280',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {landingDescription.length}/ 600
+                          </span>
                         </div>
                       </div>
 
@@ -564,7 +582,11 @@ function MultiStepBuilder() {
                             placeholder="Ej: Únete a la lista de espera y sé el primero en probarlo"
                             required
                             value={landingWaitlistText}
-                            onChange={(e) => setLandingWaitlistText(e.target.value)}
+                            onChange={(e) => {
+                      if (e.target.value.length <= 60) {
+                        setLandingWaitlistText(e.target.value);
+                      }
+                    }}
                           />
                           <span className="builder-input-icon">
                             <i className="fas fa-users" />
@@ -572,6 +594,14 @@ function MultiStepBuilder() {
                         </div>
                         <div className="builder-field-hint">
                           El texto que motivará a los usuarios a registrarse.
+                          <span style={{ 
+                            float: 'right', 
+                            color: landingWaitlistText.length === 60 ? '#dc2626' : '#6b7280',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {landingWaitlistText.length}/60
+                          </span>
                         </div>
                       </div>
 
@@ -604,7 +634,11 @@ function MultiStepBuilder() {
                               placeholder="Ej: 20% de descuento en el lanzamiento, acceso anticipado..."
                               required
                               value={landingOfferText}
-                              onChange={(e) => setLandingOfferText(e.target.value)}
+                              onChange={(e) => {
+                      if (e.target.value.length <= 80) {
+                        setLandingOfferText(e.target.value);
+                      }
+                    }}
                             />
                             <span className="builder-input-icon">
                               <i className="fas fa-gift" />
@@ -612,186 +646,525 @@ function MultiStepBuilder() {
                           </div>
                           <div className="builder-field-hint">
                             Describe la oferta especial para los primeros usuarios.
+                            <span style={{ 
+                              float: 'right', 
+                              color: landingOfferText.length === 80 ? '#dc2626' : '#6b7280',
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}>
+                              {landingOfferText.length}/80
+                            </span>
                           </div>
                         </div>
                       )}
+
+                      <div className="builder-field builder-field-full">
+                        <div className="builder-section-title" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+                          <i className="fas fa-palette" style={{ marginRight: "0.5rem" }}></i>
+                          Tema de la Landing
+                        </div>
+                        <p className="builder-field-hint" style={{ marginBottom: "1rem" }}>
+                          Elige el estilo visual que prefieres para tu landing page.
+                        </p>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+                          {/* Tema Oscuro */}
+                          <div
+                            className={`builder-estimation-card ${landingTheme === "dark" ? "selected" : ""}`}
+                            style={{
+                              cursor: "pointer",
+                              border: landingTheme === "dark" ? "2px solid #1e293b" : "1px solid #e2e8f0",
+                              background: landingTheme === "dark" ? "linear-gradient(135deg, #1e293b 0%, #334155 100%)" : "white",
+                              transition: "all 0.3s ease",
+                              color: landingTheme === "dark" ? "white" : "#1e293b",
+                              padding: "1.5rem"
+                            }}
+                            onClick={() => setLandingTheme("dark")}
+                          >
+                            <div className="builder-estimation-title" style={{ 
+                              color: landingTheme === "dark" ? "white" : "#1e293b",
+                              marginBottom: "1rem"
+                            }}>
+                              <i className="fas fa-moon" style={{ marginRight: "0.5rem" }}></i>
+                              Tema Oscuro
+                            </div>
+                            <div style={{ fontSize: "0.9rem", marginBottom: "1rem", lineHeight: "1.5" }}>
+                              Diseño moderno y elegante con fondo oscuro y elementos brillantes. Ideal para tecnología y productos premium.
+                            </div>
+                            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "#1e293b",
+                                border: "1px solid rgba(255,255,255,0.2)"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "#334155"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "#f8fafc"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)"
+                              }}></div>
+                            </div>
+                          </div>
+
+                          {/* Tema Claro */}
+                          <div
+                            className={`builder-estimation-card ${landingTheme === "light" ? "selected" : ""}`}
+                            style={{
+                              cursor: "pointer",
+                              border: landingTheme === "light" ? "2px solid #16a34a" : "1px solid #e2e8f0",
+                              background: landingTheme === "light" ? "white" : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                              transition: "all 0.3s ease",
+                              color: "#1e293b",
+                              padding: "1.5rem"
+                            }}
+                            onClick={() => setLandingTheme("light")}
+                          >
+                            <div className="builder-estimation-title" style={{ 
+                              color: "#1e293b",
+                              marginBottom: "1rem"
+                            }}>
+                              <i className="fas fa-sun" style={{ marginRight: "0.5rem" }}></i>
+                              Tema Claro
+                            </div>
+                            <div style={{ fontSize: "0.9rem", marginBottom: "1rem", lineHeight: "1.5" }}>
+                              Diseño limpio y accesible con fondo blanco y acentos verdes. Perfecto para productos amigables y corporativos.
+                            </div>
+                            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "white",
+                                border: "1px solid #e2e8f0"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "#f8fafc"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "#16a34a"
+                              }}></div>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "4px",
+                                background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)"
+                              }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Panel de Preview */}
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <div className="builder-section-title">
                       <i className="fas fa-eye" style={{ marginRight: "0.5rem" }}></i>
                       Preview de tu Landing
                     </div>
                     <p className="builder-field-hint">
-                      Así se verá tu landing page en tiempo real.
+                      Así se verá tu landing page en versión mobile.
+                      Recuerda que el diseño puede variar dependiendo de la resolución de la pantalla.
                     </p>
 
                     <div style={{
-                      background: "white",
-                      borderRadius: "12px",
-                      padding: "2rem",
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                      minHeight: "400px"
+                      position: 'relative',
+                      minHeight: '600px',
+                      background: landingTheme === 'dark'
+                            ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
+                            : 'linear-gradient(135deg, #f8fafc 0%, rgba(255, 255, 255, 0.8) 100%)',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: landingTheme === 'dark' 
+                        ? '0 20px 40px rgba(0, 0, 0, 0.3)'
+                        : '0 20px 40px rgba(0, 0, 0, 0.1)'
                     }}>
-                      {/* Preview del título */}
-                      <h1 style={{
-                        fontSize: "2rem",
-                        fontWeight: "700",
-                        color: "#1e293b",
-                        marginBottom: "1rem",
-                        textAlign: "center"
-                      }}>
-                        {landingTitle || "Tu título aparecerá aquí"}
-                      </h1>
-
-                      {/* Preview de la descripción */}
-                      <p style={{
-                        fontSize: "1.1rem",
-                        color: "#374151",
-                        lineHeight: "1.6",
-                        marginBottom: "2rem",
-                        textAlign: "center"
-                      }}>
-                        {landingDescription || "Tu descripción aparecerá aquí..."}
-                      </p>
-
-                      {/* Preview de la waitlist */}
+                      {/* Elementos flotantes de fondo */}
                       <div style={{
-                        background: "var(--surface)",
-                        borderRadius: "var(--radius)",
-                        padding: "2.5rem 2rem",
-                        border: "1px solid #e5e7eb",
-                        boxShadow: "var(--shadow)"
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        overflow: 'hidden',
+                        zIndex: 1
                       }}>
                         <div style={{
-                          width: "56px",
-                          height: "56px",
-                          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 2rem",
-                          color: "white",
-                          fontSize: "1.75rem"
+                          position: 'absolute',
+                          width: '60px',
+                          height: '60px',
+                          top: '10%',
+                          right: '10%',
+                          borderRadius: '50%',
+                          background: landingTheme === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'rgba(0, 0, 0, 0.03)',
+                          border: landingTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.1)'
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          animation: 'float 8s infinite ease-in-out'
+                        }}></div>
+                        <div style={{
+                          position: 'absolute',
+                          width: '40px',
+                          height: '40px',
+                          bottom: '20%',
+                          left: '15%',
+                          borderRadius: '50%',
+                          background: landingTheme === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'rgba(0, 0, 0, 0.03)',
+                          border: landingTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.1)'
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          animation: 'float 8s infinite ease-in-out 3s'
+                        }}></div>
+                        <div style={{
+                          position: 'absolute',
+                          width: '30px',
+                          height: '30px',
+                          top: '30%',
+                          left: '5%',
+                          borderRadius: '50%',
+                          background: landingTheme === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.05)'
+                            : 'rgba(0, 0, 0, 0.03)',
+                          border: landingTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.1)'
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          animation: 'float 8s infinite ease-in-out 6s'
+                        }}></div>
+                      </div>
+
+                      {/* Contenido principal */}
+                      <div style={{
+                        position: 'relative',
+                        zIndex: 2,
+                        padding: '3rem 1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '600px'
+                      }}>
+                        {/* Badge */}
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 1rem',
+                          background: landingTheme === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
+                          backdropFilter: 'blur(10px)',
+                          border: landingTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.2)'
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          borderRadius: '9999px',
+                          fontSize: '0.875rem',
+                          color: landingTheme === 'dark'
+                            ? 'rgba(255, 255, 255, 0.8)'
+                            : 'rgba(0, 0, 0, 0.7)',
+                          marginBottom: '2rem'
+                        }}>
+                          <i className="fas fa-sparkles" />
+                          <span>Próximamente disponible</span>
+                        </div>
+
+                        {/* Título */}
+                        <h1 style={{
+                            fontSize: '2.5rem',
+                            fontWeight: '800',
+                            lineHeight: '1.1',
+                            marginBottom: '1.5rem',
+                            color: landingTheme === 'dark'
+                              ? '#f8fafc'
+                              : '#1e293b',
+                            letterSpacing: '-0.02em',
+                            textAlign: 'center',
+                            width: '100%',
+                            overflowWrap: 'break-word',
+                            wordBreak: 'break-word',
+                            whiteSpace: 'normal'
+                        }}>
+                          {landingTitle || "Tu título aparecerá aquí"}
+                      </h1>
+
+                        {/* Descripción */}
+                        <p style={{
+                            fontSize: '1.2rem',
+                            color: landingTheme === 'dark'
+                              ? 'rgba(255, 255, 255, 0.8)'
+                              : 'rgba(0, 0, 0, 0.7)',
+                            marginBottom: '2rem',
+                            lineHeight: '1.7',
+                            maxWidth: '42rem',
+                            width: '100%',
+                            textAlign: 'center',
+                            overflowWrap: 'break-word',
+                            wordBreak: 'break-word'
+                        }}>
+                          {landingDescription || "Tu descripción aparecerá aquí..."}
+                      </p>
+
+                        {/* Tarjeta de waitlist */}
+                      <div style={{
+                          width: '100%',
+                          maxWidth: '34rem',
+                          background: landingTheme === 'dark'
+                            ? 'rgba(30, 41, 59, 0.95)'
+                            : 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          padding: '2rem',
+                          borderRadius: '28px',
+                          boxShadow: landingTheme === 'dark'
+                            ? '0 30px 60px rgba(0, 0, 0, 0.5)'
+                            : '0 30px 60px rgba(0, 0, 0, 0.15)',
+                          border: landingTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.1)'
+                            : '1px solid rgba(0, 0, 0, 0.1)',
+                          position: 'relative',
+                          overflow: 'hidden'
+                      }}>
+                          {/* Barra superior decorativa */}
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '4px',
+                            background: landingTheme === 'dark'
+                              ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+                              : 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)'
+                          }}></div>
+
+                          {/* Icono */}
+                          <div style={{
+                            width: '48px',
+                            height: '48px',
+                            background: landingTheme === 'dark'
+                              ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+                              : 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 1rem',
+                            boxShadow: landingTheme === 'dark'
+                              ? '0 8px 25px rgba(255, 255, 255, 0.2)'
+                              : '0 8px 25px rgba(22, 163, 74, 0.3)',
+                            color: landingTheme === 'dark' ? '#1e293b' : 'white',
+                            fontSize: '1.25rem'
                         }}>
                           <i className="fas fa-users" />
                         </div>
 
+                          {/* Título de waitlist */}
                         <h2 style={{
-                          fontSize: "2rem",
-                          fontWeight: "700",
-                          color: "var(--text-dark)",
-                          marginBottom: "1rem",
-                          textAlign: "center",
-                          lineHeight: "1.2"
+                            fontSize: '1.5rem',
+                            fontWeight: '800',
+                            color: landingTheme === 'dark' ? '#f8fafc' : '#1e293b',
+                            marginBottom: '1rem',
+                            textAlign: 'center',
+                            lineHeight: '1.2'
                         }}>
                           {landingWaitlistText || "Texto de waitlist"}
                         </h2>
 
+                          {/* Texto de oferta */}
                         <p style={{
-                          color: "var(--text-light)",
-                          marginBottom: "2rem",
-                          textAlign: "center",
-                          fontSize: "1.125rem",
-                          lineHeight: "1.6"
+                            color: landingTheme === 'dark'
+                              ? 'rgba(255, 255, 255, 0.7)'
+                              : 'rgba(0, 0, 0, 0.7)',
+                            marginBottom: '1.5rem',
+                            textAlign: 'center',
+                            fontSize: '1rem',
+                            lineHeight: '1.6'
                         }}>
                           Sé el primero en acceder cuando lancemos. Obtén acceso anticipado y beneficios exclusivos.
                         </p>
 
-                        <form style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {/* Formulario */}
+                          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             <label style={{
-                              fontSize: "0.9rem",
-                              fontWeight: "600",
-                              color: "var(--text-dark)",
-                              display: "block",
-                              marginBottom: "0.35rem"
+                                  fontSize: '0.9rem',
+                                  fontWeight: '700',
+                                  color: landingTheme === 'dark' ? '#f8fafc' : '#1e293b',
+                                  letterSpacing: '0.02em',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem'
                             }}>
+                                  <i className="fas fa-user" />
                               Nombre completo
                             </label>
+                                <div style={{ position: 'relative' }}>
+                                  <span style={{
+                                    position: 'absolute',
+                                    left: '0.85rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: landingTheme === 'dark'
+                                      ? 'rgba(255, 255, 255, 0.5)'
+                                      : 'rgba(0, 0, 0, 0.5)',
+                                    pointerEvents: 'none',
+                                    fontSize: '0.95rem'
+                                  }}>
+                                    <i className="fas fa-id-badge" />
+                                  </span>
                             <input
                               type="text"
                               placeholder="Tu nombre"
                               disabled
                               style={{
-                                width: "100%",
-                                padding: "0.85rem 1rem",
-                                borderRadius: "var(--radius)",
-                                border: "2px solid #e5e7eb",
-                                fontSize: "0.95rem",
-                                background: "var(--surface)",
-                                color: "var(--text-dark)"
+                                      width: '100%',
+                                      padding: '1rem 1.25rem 1rem 2.75rem',
+                                      border: landingTheme === 'dark'
+                                        ? '2px solid rgba(255, 255, 255, 0.2)'
+                                        : '2px solid rgba(0, 0, 0, 0.2)',
+                                      borderRadius: '14px',
+                                      fontSize: '1rem',
+                                      background: landingTheme === 'dark'
+                                        ? 'rgba(15, 23, 42, 0.6)'
+                                        : 'rgba(255, 255, 255, 0.9)',
+                                      backdropFilter: 'blur(10px)',
+                                      color: landingTheme === 'dark' ? '#f8fafc' : '#1e293b',
+                                      boxShadow: landingTheme === 'dark'
+                                        ? '0 10px 30px rgba(0, 0, 0, 0.2)'
+                                        : '0 10px 30px rgba(0, 0, 0, 0.06)',
+                                      transition: 'all 0.25s ease'
                               }}
                             />
+                                </div>
                           </div>
 
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                             <label style={{
-                              fontSize: "0.9rem",
-                              fontWeight: "600",
-                              color: "var(--text-dark)",
-                              display: "block",
-                              marginBottom: "0.35rem"
+                                  fontSize: '0.9rem',
+                                  fontWeight: '700',
+                                  color: landingTheme === 'dark' ? '#f8fafc' : '#1e293b',
+                                  letterSpacing: '0.02em',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem'
                             }}>
+                                  <i className="fas fa-envelope" />
                               Correo electrónico
                             </label>
+                                <div style={{ position: 'relative' }}>
+                                  <span style={{
+                                    position: 'absolute',
+                                    left: '0.85rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: landingTheme === 'dark'
+                                      ? 'rgba(255, 255, 255, 0.5)'
+                                      : 'rgba(0, 0, 0, 0.5)',
+                                    pointerEvents: 'none',
+                                    fontSize: '0.95rem'
+                                  }}>
+                                    <i className="fas fa-at" />
+                                  </span>
                             <input
                               type="email"
                               placeholder="tu@email.com"
                               disabled
                               style={{
-                                width: "100%",
-                                padding: "0.85rem 1rem",
-                                borderRadius: "var(--radius)",
-                                border: "2px solid #e5e7eb",
-                                fontSize: "0.95rem",
-                                background: "var(--surface)",
-                                color: "var(--text-dark)"
-                              }}
-                            />
-                          </div>
+                                      width: '100%',
+                                      padding: '1rem 1.25rem 1rem 2.75rem',
+                                      border: landingTheme === 'dark'
+                                        ? '2px solid rgba(255, 255, 255, 0.2)'
+                                        : '2px solid rgba(0, 0, 0, 0.2)',
+                                      borderRadius: '14px',
+                                      fontSize: '1rem',
+                                      background: landingTheme === 'dark'
+                                        ? 'rgba(15, 23, 42, 0.6)'
+                                        : 'rgba(255, 255, 255, 0.9)',
+                                      backdropFilter: 'blur(10px)',
+                                      color: landingTheme === 'dark' ? '#f8fafc' : '#1e293b',
+                                      boxShadow: landingTheme === 'dark'
+                                        ? '0 10px 30px rgba(0, 0, 0, 0.2)'
+                                        : '0 10px 30px rgba(0, 0, 0, 0.06)',
+                                      transition: 'all 0.25s ease'
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
 
                           <button
                             type="button"
                             onClick={(event) => event.preventDefault()}
                             style={{
-                              width: "100%",
-                              background: "var(--primary)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "var(--radius)",
-                              padding: "1rem 2rem",
-                              fontSize: "1.125rem",
-                              fontWeight: "600",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "0.75rem",
-                              textDecoration: "none",
-                              transition: "var(--transition)"
+                                width: '100%',
+                                background: landingTheme === 'dark'
+                                  ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+                                  : 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+                                color: landingTheme === 'dark' ? '#1e293b' : 'white',
+                                border: 'none',
+                                borderRadius: '16px',
+                                padding: '1rem 1.5rem',
+                                fontSize: '1rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.75rem',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                boxShadow: landingTheme === 'dark'
+                                  ? '0 8px 25px rgba(255, 255, 255, 0.2)'
+                                  : '0 8px 25px rgba(22, 163, 74, 0.3)',
+                                marginTop: '1.25rem'
                             }}
                           >
                             <i className="fas fa-paper-plane" />
                             Unirme a la lista
                           </button>
                         </form>
+                        </div>
 
+                        {/* Oferta especial */}
                         {hasLandingOffer && landingOfferText && (
                           <div style={{
-                            background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)",
-                            border: "1px solid rgba(34, 197, 94, 0.2)",
-                            color: "var(--accent)",
-                            padding: "1rem",
-                            borderRadius: "var(--radius)",
-                            textAlign: "center",
-                            fontWeight: "600",
-                            fontSize: "0.9rem",
-                            marginTop: "1.5rem"
+                            background: landingTheme === 'dark'
+                              ? 'linear-gradient(135deg, rgba(248, 250, 252, 0.1) 0%, rgba(226, 232, 240, 0.1) 100%)'
+                              : 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)',
+                            border: landingTheme === 'dark'
+                              ? '1px solid rgba(248, 250, 252, 0.2)'
+                              : '1px solid rgba(34, 197, 94, 0.2)',
+                            color: landingTheme === 'dark' ? '#f8fafc' : '#16a34a',
+                            padding: '1rem',
+                            borderRadius: '12px',
+                            textAlign: 'center',
+                            fontWeight: '600',
+                            fontSize: '0.9rem',
+                            marginTop: '1.5rem',
+                            backdropFilter: 'blur(10px)'
                           }}>
                             🎁 {landingOfferText}
                           </div>
@@ -803,7 +1176,7 @@ function MultiStepBuilder() {
                       <div className="builder-field builder-field-full">
                         <label className="builder-label" htmlFor="projectName">
                           <i className="fas fa-tag" style={{ marginRight: "0.5rem" }}></i>
-                          Nombre del Proyecto *
+                          Nombre del Experimento *
                         </label>
                         <div className="builder-input-wrapper">
                           <input
@@ -851,7 +1224,7 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          Tu landing estará en: <strong>vakant.es/{projectSlug || "tu-url"}</strong> (solo minúsculas, números y guiones).
+                          Tu landing estará en: <strong>vakant.es/{projectSlug || "tu-url"}</strong> (solo minúsculas, números y guiones). Comprobamos que no exista otra igual antes de guardar.
                         </div>
                       </div>
                     </div>
