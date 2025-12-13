@@ -1,37 +1,17 @@
 "use client";
 
-import { FormEvent, useState, useEffect, useCallback, useMemo } from "react";
+import { FormEvent, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../AuthContext";
 import { useGeneration } from "../GenerationContext";
-
-type StepKey =
-  | "select-type"
-  | "basic-info"
-  | "landing-content"
-  | "landing-summary"
-  | "ads-config"
-  | "ad-creation"
-  | "combo-summary";
-
-const LANDING_STEPS: StepKey[] = ["select-type", "basic-info", "landing-content", "landing-summary"];
-const COMBO_STEPS: StepKey[] = [
-  "select-type",
-  "basic-info",
-  "landing-content",
-  "ads-config",
-  "ad-creation",
-  "combo-summary",
-];
 
 function MultiStepBuilder() {
   const router = useRouter();
   const { user, accessToken } = useAuth();
   const { setStatus, setLastLandingSlug, setLastAdId } = useGeneration();
 
-  const [step, setStep] = useState<number>(0); // Step 0 = Selección de tipo
+  const [step, setStep] = useState<number>(0); // Step 0 = Descripción del proceso
   const [submitting, setSubmitting] = useState(false);
-  const [projectType, setProjectType] = useState<"landing-only" | "combo" | null>(null);
 
   // Estados para contenido de landing escrito por usuario
   const [landingTitle, setLandingTitle] = useState("");
@@ -79,13 +59,8 @@ function MultiStepBuilder() {
     error: string | null;
   }>({ loading: false, data: null, error: null });
 
-  const totalSteps = projectType === "landing-only" ? 3 : 5;
+  const totalSteps = 5;
   const progressPercent = ((step + 1) / totalSteps) * 100;
-
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
 
   const estimateImpressions = useCallback(async (budget: number) => {
     if (budget < 1) {
@@ -135,6 +110,11 @@ function MultiStepBuilder() {
       });
     }
   }, [accessToken]);
+
+  if (!user) {
+    router.push("/login");
+    return null;
+  }
 
   // Función para validar contenido de landing con IA (solo verifica apropiado)
   const validateLandingContent = async () => {
@@ -246,17 +226,14 @@ function MultiStepBuilder() {
 
   // Navegación entre steps
   const nextStep = async () => {
-    if (step === 0 && !projectType) return;
-
-    // Validación del contenido de landing (primer paso después de seleccionar tipo)
-    if ((projectType === 'landing-only' && step === 1) ||
-      (projectType === 'combo' && step === 1)) {
+    // Validación del contenido de landing (primer paso después de la introducción)
+    if (step === 1) {
       const isValid = await validateLandingContent();
       if (!isValid) return;
     }
 
-    // Validación del anuncio (solo combo)
-    if (projectType === "combo" && step === 3) {
+    // Validación del anuncio
+    if (step === 3) {
       const isValid = await validateAdContent();
       if (!isValid) return;
     }
@@ -318,7 +295,7 @@ function MultiStepBuilder() {
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
-          mode: projectType || "landing-only",
+          mode: "combo",
           ideaName: projectName,
           ideaDescription: landingDescription,
           waitlistOffer: hasLandingOffer ? landingOfferText : "",
@@ -326,17 +303,14 @@ function MultiStepBuilder() {
           landingWaitlistText,
           customSlug: projectSlug,
           landingTheme, // Añadir el tema seleccionado
-          // Add campaign settings and ad content only for combo
-          ...(projectType === "combo" && {
-            campaignSettings: {
-              durationDays: campaignDuration,
-              dailyBudget: dailyBudget,
-              totalBudget: dailyBudget * campaignDuration
-            },
-            adHeadline,
-            adMessage,
-            adPicture: wantsAdPicture ? adPicture : null
-          })
+          campaignSettings: {
+            durationDays: campaignDuration,
+            dailyBudget: dailyBudget,
+            totalBudget: dailyBudget * campaignDuration
+          },
+          adHeadline,
+          adMessage,
+          adPicture: wantsAdPicture ? adPicture : null
         }),
       });
 
@@ -350,9 +324,7 @@ function MultiStepBuilder() {
 
       if (ideaSlug) {
         setLastLandingSlug(ideaSlug);
-        if (projectType === "combo") {
-          setLastAdId(data?.adData?.adId);
-        }
+        setLastAdId(data?.adData?.adId);
         setStatus("completed");
         // Redirect after successful creation
         router.push("/");
@@ -386,103 +358,112 @@ function MultiStepBuilder() {
           </div>
 
           <form className="builder-form" onSubmit={handleSubmit}>
-            {/* Step 0: Selección de Tipo de Proyecto */}
+                        {/* Step 0: Descripci?n del proceso */}
             {step === 0 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
-                  ¿Qué tipo de proyecto quieres crear?
+                  Cómo creamos tu landing + anuncios?
                 </div>
-                <p className="builder-field-hint">
-                  Elige la opción que mejor se adapte a tus necesidades. Puedes añadir anuncios más tarde si lo prefieres.
-                </p>
 
                 <div className="builder-field builder-field-full">
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginTop: "1rem" }}>
-                    {/* Opción 1: Solo Landing */}
-                    <div
-                      className={`builder-estimation-card ${projectType === "landing-only" ? "selected" : ""}`}
-                      style={{
-                        cursor: "pointer",
-                        border: projectType === "landing-only" ? "2px solid #1e293b" : "1px solid #e2e8f0",
-                        background: projectType === "landing-only" ? "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" : "white",
-                        transition: "all 0.3s ease"
-                      }}
-                      onClick={() => setProjectType("landing-only")}
-                    >
-                      <div className="builder-estimation-title" style={{ color: "#1e293b" }}>
-                        <i className="fas fa-laptop-house" style={{ marginRight: "0.5rem" }}></i>
-                        Solo Landing Page
-                      </div>
-                      <div style={{ fontSize: "0.9rem", color: "#374151", marginBottom: "1rem" }}>
-                        Crea una landing page profesional para validar tu idea. Perfecto para empezar y testear tu concepto.
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Landing page generada por IA
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", marginTop: "1rem" }}>
+                    <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                        <div style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #475569 0%, #475569 100%)",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "600",
+                          fontSize: "1.1rem"
+                        }}>
+                          1
                         </div>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Waitlist con ofertas opcionales
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Contenido validado y seguro
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "#6b7280" }}>
-                          ➕ Añade anuncios más tarde
-                        </div>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Tu idea</strong>
                       </div>
-                      <div style={{ marginTop: "1rem", fontSize: "1.1rem", fontWeight: "600", color: "#1e293b" }}>
-                        €19
-                      </div>
+                      <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
+                        Define el título y la descrpción que aparecerá en tu landing.</p>
                     </div>
-
-                    {/* Opción 2: Combo Landing + Ads */}
-                    <div
-                      className={`builder-estimation-card ${projectType === "combo" ? "selected" : ""}`}
-                      style={{
-                        cursor: "pointer",
-                        border: projectType === "combo" ? "2px solid #1e293b" : "1px solid #e2e8f0",
-                        background: projectType === "combo" ? "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" : "white",
-                        transition: "all 0.3s ease"
-                      }}
-                      onClick={() => setProjectType("combo")}
-                    >
-                      <div className="builder-estimation-title" style={{ color: "#1e293b" }}>
-                        <i className="fas fa-bullhorn" style={{ marginRight: "0.5rem" }}></i>
-                        Combo Landing + Anuncios
-                      </div>
-                      <div style={{ fontSize: "0.9rem", color: "#374151", marginBottom: "1rem" }}>
-                        Todo en uno: landing page + campaña de anuncios. Ahorra tiempo y lanza más rápido.
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Todo lo de la landing page
+                    <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                        <div style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #475569 0%, #475569 100%)",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "600",
+                          fontSize: "1.1rem"
+                        }}>
+                          2
                         </div>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Campaña de anuncios completa
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "#059669" }}>
-                          ✅ Anuncios personalizados por ti
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "#dc2626" }}>
-                          🔥 Ahorra 15% vs comprar por separado
-                        </div>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Landing generada por IA</strong>
                       </div>
-                      <div style={{ marginTop: "1rem", fontSize: "1.1rem", fontWeight: "600", color: "#1e293b" }}>
-                        €49 <span style={{ fontSize: "0.8rem", color: "#6b7280", textDecoration: "line-through" }}>€59</span>
+                      <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
+                        Nuestra IA crea el landing con el título, la descripción y la waitlist en unos instantes.</p>
+                    </div>
+                    <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                        <div style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #475569 0%, #475569 100%)",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "600",
+                          fontSize: "1.1rem"
+                        }}>
+                          3
+                        </div>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Campaña de anuncios</strong>
                       </div>
+                      <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
+                        Elige presupuesto, duración y redactamos el título y el mensaje de tu anuncio para atraer tráfico relevante.
+                      </p>
+                    </div>
+                    <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                        <div style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #475569 0%, #475569 100%)",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "600",
+                          fontSize: "1.1rem"
+                        }}>
+                          4
+                        </div>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Revisión y lanzamiento</strong>
+                      </div>
+                      <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
+                        Te mostramos un resumen con todo lo generado antes de crear el proyecto y lanzarlo automáticamente.
+                      </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="builder-field-hint" style={{ marginTop: "1.5rem" }}>
-                  <i className="fas fa-info-circle" style={{ marginRight: "0.5rem" }}></i>
-                  Puedes añadir anuncios a tu landing page más tarde desde el dashboard si lo necesitas.
+                  <div className="builder-field-hint" style={{ marginTop: "1.5rem" }}>
+                    <i className="fas fa-info-circle" style={{ marginRight: "0.5rem" }}></i>
+                    Avanzamos paso a paso para que tengas control y visibilidad del resultado.
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step 1: Contenido de Landing con Preview */}
+{/* Step 1: Contenido de Landing con Preview */}
             {step === 1 && (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start" }}>
@@ -1311,8 +1292,8 @@ function MultiStepBuilder() {
                 )}
               </>)}
 
-            {/* Step 2: Configuración de Ads (solo para combo) */}
-            {step === 2 && projectType === "combo" && (
+            {/* Step 2: Configuración de Ads */}
+            {step === 2 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-chart-line" style={{ marginRight: "0.5rem" }}></i>
@@ -1388,11 +1369,11 @@ function MultiStepBuilder() {
                       <div className="builder-estimation-grid">
                         <div className="builder-estimation-item">
                           <div className="builder-estimation-value">{estimation.data.estimatedImpressions.toLocaleString()}</div>
-                          <div className="builder-estimation-label">Impresiones</div>
+                          <div className="builder-estimation-label">Impresiones diarias</div>
                         </div>
                         <div className="builder-estimation-item">
                           <div className="builder-estimation-value">{estimation.data.estimatedClicks.toLocaleString()}</div>
-                          <div className="builder-estimation-label">Clics</div>
+                          <div className="builder-estimation-label">Clics diarios</div>
                         </div>
                         <div className="builder-estimation-item">
                           <div className="builder-estimation-value">{estimation.data.estimatedCPC}</div>
@@ -1409,8 +1390,8 @@ function MultiStepBuilder() {
               </div>
             )}
 
-            {/* Step 3: Creación de Anuncio (solo para combo) */}
-            {step === 3 && projectType === "combo" && (
+            {/* Step 3: Creación de Anuncio */}
+            {step === 3 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-bullhorn" style={{ marginRight: "0.5rem" }}></i>
@@ -1592,63 +1573,8 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
               </div>
             )}
 
-            {/* Step 2: Finalización (solo landing-only) */}
-            {step === 2 && projectType === "landing-only" && (
-              <div className="builder-form-grid">
-                <div className="builder-section-title">
-                  <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
-                  ¡Todo Listo!
-                </div>
-                <p className="builder-field-hint">
-                  Tu landing page está lista para generarse. Revisa la información y confirma para crear tu proyecto.
-                </p>
-
-                <div className="builder-field builder-field-full">
-                  <div className="builder-estimation-card">
-                    <div className="builder-estimation-title">
-                      <i className="fas fa-check-circle" style={{ marginRight: "0.5rem" }}></i>
-                      Resumen del Proyecto
-                    </div>
-
-                    <div style={{ marginBottom: "1rem" }}>
-                      <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                        Tipo: Solo Landing Page
-                      </h4>
-                      <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Precio: €19
-                      </p>
-                    </div>
-
-                    <div style={{ marginBottom: "1rem" }}>
-                      <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                        Proyecto: {projectName}
-                      </h4>
-                      <p style={{ fontSize: "0.85rem", color: "#374151", lineHeight: "1.4" }}>
-                        {landingDescription.substring(0, 150)}...
-                      </p>
-                    </div>
-
-                    {hasLandingOffer && landingOfferText && (
-                      <div style={{ marginBottom: "1rem" }}>
-                        <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                          Oferta Waitlist
-                        </h4>
-                        <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                          🎁 {landingOfferText}
-                        </p>
-                      </div>
-                    )}
-
-                    <div style={{ fontSize: "0.85rem", color: "#059669", marginTop: "1rem" }}>
-                      ✅ Contenido validado y seguro
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Finalización (combo) */}
-            {step === 4 && projectType === "combo" && (
+            {/* Step 4: Finalización */}
+            {step === 4 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
@@ -1707,6 +1633,18 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
             <div className="builder-footer">
 
               <div className="builder-footer-actions">
+                {step === 0 && (
+                  <button
+                    type="button"
+                    className="builder-button builder-button-secondary"
+                    onClick={() => router.push("/")}
+                    disabled={submitting}
+                  >
+                    <i className="fas fa-arrow-left" style={{ marginRight: "0.5rem" }}></i>
+                    Volver al Dashboard
+                  </button>
+                )}
+                
                 {step > 0 && (
                   <button
                     type="button"

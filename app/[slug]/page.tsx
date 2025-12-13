@@ -18,32 +18,123 @@ function buildHtml(landing: any, slug: string) {
     landing?.waitlistOffer ||
       "Sé el primero en acceder a nuestras funciones exclusivas y recibe un 20% de descuento en tu primer año."
   );
+  const themeMode = landing?.theme === "light" ? "light" : "dark";
+  const palettes: Record<
+    string,
+    {
+      primary: string;
+      primaryLight: string;
+      secondary: string;
+      secondaryLight: string;
+      accent: string;
+      accentLight: string;
+      textPrimary: string;
+      textSecondary: string;
+      textLight: string;
+      bgPrimary: string;
+      bgSecondary: string;
+      bgCard: string;
+      border: string;
+      success: string;
+      gradient: string;
+      gradientAccent: string;
+      shadow: string;
+      shadowLg: string;
+      floatingBg: string;
+      floatingBorder: string;
+      floatingShadow: string;
+      formIcon: string;
+      calloutBg: string;
+      calloutBorder: string;
+    }
+  > = {
+    dark: {
+      primary: "#f8fafc",
+      primaryLight: "#e2e8f0",
+      secondary: "#16a34a",
+      secondaryLight: "#22c55e",
+      accent: "#0ea5e9",
+      accentLight: "#38bdf8",
+      textPrimary: "#f8fafc",
+      textSecondary: "rgba(248, 250, 252, 0.8)",
+      textLight: "rgba(248, 250, 252, 0.6)",
+      bgPrimary: "linear-gradient(135deg, #0f172a 0%, #1f2937 100%)",
+      bgSecondary: "rgba(248, 250, 252, 0.05)",
+      bgCard: "rgba(15, 23, 42, 0.88)",
+      border: "rgba(255, 255, 255, 0.2)",
+      success: "#16a34a",
+      gradient: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+      gradientAccent: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+      shadow: "0 25px 60px rgba(0, 0, 0, 0.4)",
+      shadowLg: "0 35px 80px rgba(0, 0, 0, 0.5)",
+      floatingBg: "rgba(255, 255, 255, 0.04)",
+      floatingBorder: "rgba(255, 255, 255, 0.15)",
+      floatingShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+      formIcon: "rgba(248, 250, 252, 0.9)",
+      calloutBg: "rgba(255, 255, 255, 0.06)",
+      calloutBorder: "rgba(255, 255, 255, 0.15)"
+    },
+    light: {
+      primary: "#0f172a",
+      primaryLight: "#1f2937",
+      secondary: "#0f172a",
+      secondaryLight: "#475569",
+      accent: "#0ea5e9",
+      accentLight: "#38bdf8",
+      textPrimary: "#0f172a",
+      textSecondary: "rgba(15, 23, 42, 0.8)",
+      textLight: "rgba(15, 23, 42, 0.6)",
+      bgPrimary: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+      bgSecondary: "rgba(15, 23, 42, 0.05)",
+      bgCard: "#ffffff",
+      border: "rgba(15, 23, 42, 0.12)",
+      success: "#059669",
+      gradient: "linear-gradient(135deg, #0ea5e9 0%, #60a5fa 100%)",
+      gradientAccent: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+      shadow: "0 20px 40px rgba(15, 23, 42, 0.12)",
+      shadowLg: "0 30px 70px rgba(15, 23, 42, 0.18)",
+      floatingBg: "rgba(15, 23, 42, 0.06)",
+      floatingBorder: "rgba(15, 23, 42, 0.18)",
+      floatingShadow: "0 20px 40px rgba(15, 23, 42, 0.15)",
+      formIcon: "rgba(15, 23, 42, 0.7)",
+      calloutBg: "rgba(15, 23, 42, 0.05)",
+      calloutBorder: "rgba(15, 23, 42, 0.1)"
+    }
+  };
+  const palette = palettes[themeMode] || palettes.dark;
+  const colorVars = `
+        :root {
+            --primary: ${palette.primary};
+            --primary-light: ${palette.primaryLight};
+            --secondary: ${palette.secondary};
+            --secondary-light: ${palette.secondaryLight};
+            --accent: ${palette.accent};
+            --accent-light: ${palette.accentLight};
+            --text-primary: ${palette.textPrimary};
+            --text-secondary: ${palette.textSecondary};
+            --text-light: ${palette.textLight};
+            --bg-primary: ${palette.bgPrimary};
+            --bg-secondary: ${palette.bgSecondary};
+            --bg-card: ${palette.bgCard};
+            --border: ${palette.border};
+            --success: ${palette.success};
+            --gradient: ${palette.gradient};
+            --gradient-accent: ${palette.gradientAccent};
+            --shadow: ${palette.shadow};
+            --shadow-lg: ${palette.shadowLg};
+            --floating-bg: ${palette.floatingBg};
+            --floating-border: ${palette.floatingBorder};
+            --floating-shadow: ${palette.floatingShadow};
+            --input-icon-color: ${palette.formIcon};
+            --callout-bg: ${palette.calloutBg};
+            --callout-border: ${palette.calloutBorder};
+        }
+    `;
   const year = new Date().getFullYear();
 
   return `
     <style>
-        :root {
-            --primary: #1e293b;
-            --primary-light: #334155;
-            --secondary: #16a34a;
-            --secondary-light: #22c55e;
-            --accent: #0ea5e9;
-            --accent-light: #38bdf8;
-
-            --text-primary: #f8fafc;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-light: rgba(255, 255, 255, 0.6);
-            --bg-primary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            --bg-secondary: rgba(255, 255, 255, 0.05);
-            --bg-card: rgba(255, 255, 255, 0.95);
-            --border: rgba(255, 255, 255, 0.2);
-            --success: #16a34a;
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.3);
-            --gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            --gradient-accent: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-        }
-
+${colorVars}
         * {
             margin: 0;
             padding: 0;
@@ -241,8 +332,8 @@ function buildHtml(landing: any, slug: string) {
             left: 0.85rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #0f172a;
-            opacity: 0.65;
+            color: var(--input-icon-color);
+            opacity: 0.75;
             pointer-events: none;
             font-size: 0.95rem;
         }
@@ -299,9 +390,9 @@ function buildHtml(landing: any, slug: string) {
             font-size: 0.95rem;
             margin-top: 1rem;
             padding: 0.75rem 1rem;
-            background: rgba(15, 23, 42, 0.05);
+            background: var(--callout-bg);
             border-radius: 12px;
-            border: 1px dashed rgba(15, 23, 42, 0.1);
+            border: 1px dashed var(--callout-border);
         }
 
         .form-button::before {
@@ -372,9 +463,10 @@ function buildHtml(landing: any, slug: string) {
         .floating-element {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--floating-bg);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--floating-border);
+            box-shadow: var(--floating-shadow);
             animation: float 20s infinite ease-in-out;
         }
 
@@ -466,6 +558,18 @@ function buildHtml(landing: any, slug: string) {
             
             .hero-description {
                 font-size: 1rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-button {
+                padding: 0.9rem 1.1rem;
+            }
+
+            .floating-elements {
+                display: none;
             }
         }
     </style>

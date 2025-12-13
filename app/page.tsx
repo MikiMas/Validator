@@ -13,7 +13,10 @@ function LandingPublica() {
         <div className="lp-container lp-nav-inner">
           <a href="#" className="lp-logo">
             <i className="fas fa-layer-group" />
-            <span>Validator</span>
+            <div className="lp-logo-text">
+              <span>MF Proof</span>
+              <small>Plataforma de validacion</small>
+            </div>
           </a>
           <div className="lp-nav-actions">
             <a href="/login" className="lp-link-muted">
@@ -29,6 +32,12 @@ function LandingPublica() {
       <main>
         <section className="lp-hero">
           <div className="lp-container">
+            <div className="lp-branding">
+              <p className="lp-brand-name">MF Proof</p>
+              <p className="lp-brand-subtext">
+                Validacion acelerada para ideas SaaS y productos digitales sin perder tiempo.
+              </p>
+            </div>
             <span className="lp-pill">Plataforma de validación para SaaS y productos digitales</span>
             <h1 className="lp-headline">
               Valida tus ideas antes
@@ -104,6 +113,14 @@ function Dashboard() {
     waitlist: [],
     experimentName: ""
   });
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    experiment: any | null;
+  }>({
+    isOpen: false,
+    experiment: null
+  });
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchExperiments() {
@@ -311,6 +328,98 @@ function Dashboard() {
     document.body.removeChild(link);
   };
 
+  const calculateAdState = (experiment: any) => {
+    const duration = experiment?.campaign_settings?.durationDays || 0;
+    const createdAt = experiment?.created_at ? new Date(experiment.created_at) : null;
+    const daysSinceStart = createdAt
+      ? (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      : 0;
+    const daysRemaining = Math.max(0, duration - daysSinceStart);
+    const adStillRunning = Boolean(experiment?.ad_id && duration > 0 && daysSinceStart < duration);
+
+    return {
+      duration,
+      daysSinceStart,
+      daysRemaining,
+      adStillRunning,
+      hasAd: Boolean(experiment?.ad_id)
+    };
+  };
+
+  const getDeletionMessage = (experiment: any) => {
+    if (!experiment) {
+      return "Se borrará completamente la landing y ya no se podrá acceder a ella.";
+    }
+
+    const { duration, daysRemaining, adStillRunning, hasAd } = calculateAdState(experiment);
+
+    if (adStillRunning) {
+      return `El periodo del anuncio (${duration} días) aún no termina (${Math.ceil(daysRemaining)} días restantes) y no se te devolverá el dinero invertido.`;
+    }
+
+    if (hasAd) {
+      return "El anuncio ya terminó, pero la eliminación sigue siendo irreversible.";
+    }
+
+    return "Se borrará completamente la landing y ya no se podrá acceder a ella.";
+  };
+
+  const openDeleteModal = (experiment: any) => {
+    setDeleteModal({
+      isOpen: true,
+      experiment
+    });
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      experiment: null
+    });
+  };
+
+  const handleDeleteExperiment = async (experiment: any) => {
+    if (!experiment?.id) {
+      return false;
+    }
+    setDeleteLoadingId(experiment.id);
+
+    try {
+      const response = await fetch("/api/deleteExperiment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({ id: experiment.id })
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || "No se pudo eliminar el experimento");
+      }
+
+      setExperiments(prev => prev.filter(exp => exp.id !== experiment.id));
+      alert("Experimento eliminado correctamente.");
+      return true;
+    } catch (error: any) {
+      console.error("Error eliminando experimento:", error);
+      alert(error?.message || "No se pudo eliminar el experimento.");
+      return false;
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
+
+  const confirmDeleteExperiment = async () => {
+    if (!deleteModal.experiment) return;
+
+    const success = await handleDeleteExperiment(deleteModal.experiment);
+    if (success) {
+      closeDeleteModal();
+    }
+  };
+
   return (
     <div className="dash-page">
       <div className="dash-shell">
@@ -350,13 +459,19 @@ function Dashboard() {
 
         <main className="dash-main">
           <header className="dash-header">
-            <div>
-              <h1 className="dash-title">Bienvenido de nuevo</h1>
-              <p className="dash-subtitle">
-                Crea nuevos experimentos y valida tus ideas con datos reales
-              </p>
-              {getStatusDisplay()}
+            <div className="dash-header-top">
+              <div className="dash-branding">
+                <span className="dash-brand-pill">MF Proof</span>
+                <p className="dash-brand-subtext">Plataforma de validacion colaborativa</p>
+              </div>
+              <div>
+                <h1 className="dash-title">Bienvenido de nuevo</h1>
+                <p className="dash-subtitle">
+                  Crea nuevos experimentos y valida tus ideas con datos reales
+                </p>
+              </div>
             </div>
+            {getStatusDisplay()}
           </header>
 
           <div className="dash-grid">
@@ -415,6 +530,14 @@ function Dashboard() {
                                 {exp.ad_id ? 'Activo' : 'Solo landing'}
                               </span>
                             </div>
+                            <button
+                              type="button"
+                              className="experiment-delete-button"
+                              onClick={() => openDeleteModal(exp)}
+                              disabled={deleteLoadingId === exp.id}
+                            >
+                              {deleteLoadingId === exp.id ? "Eliminando..." : "Eliminar experimento"}
+                            </button>
                           </div>
                         </div>
                         
@@ -484,6 +607,43 @@ function Dashboard() {
         </main>
       </div>
 
+      {deleteModal.isOpen && (
+        <div className="delete-modal-overlay" onClick={closeDeleteModal}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <h3 className="delete-modal-title">
+                <i className="fas fa-trash-alt" style={{ marginRight: "0.35rem", color: "#dc2626" }}></i>
+                Eliminar experimento
+              </h3>
+              <p className="delete-modal-description">
+                ¿Quieres eliminar "{deleteModal.experiment?.idea_name}"? Esta acción elimina la landing y deja de estar accesible.
+              </p>
+              <p className="delete-modal-warning">
+                {getDeletionMessage(deleteModal.experiment)}
+                <strong style={{ display: "block", marginTop: "0.25rem" }}>Esta acción no se puede deshacer.</strong>
+              </p>
+            </div>
+            <div className="delete-modal-actions">
+              <button
+                className="delete-modal-button delete-modal-button-secondary"
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deleteLoadingId === deleteModal.experiment?.id}
+              >
+                Cancelar
+              </button>
+              <button
+                className="delete-modal-button delete-modal-button-danger"
+                type="button"
+                onClick={confirmDeleteExperiment}
+                disabled={deleteLoadingId === deleteModal.experiment?.id}
+              >
+                {deleteLoadingId === deleteModal.experiment?.id ? "Eliminando..." : "Confirmar eliminación"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal de Waitlist */}
       {waitlistModal.isOpen && (
         <div className="waitlist-modal-overlay" onClick={closeWaitlistModal}>

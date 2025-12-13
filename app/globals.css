@@ -1920,6 +1920,45 @@ footer {
   padding: 2rem 2.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dash-header-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.dash-branding {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dash-brand-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.85rem;
+  box-shadow: 0 15px 45px rgba(37, 99, 235, 0.25);
+}
+
+.dash-brand-subtext {
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .dash-title {
@@ -2154,6 +2193,36 @@ footer {
 .experiment-card-actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.experiment-delete-button {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.experiment-delete-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(185, 28, 28, 0.25);
+  background: #fca5a5;
+}
+
+.experiment-delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .experiment-card-link {
@@ -2670,6 +2739,19 @@ footer {
   font-size: 1.1rem;
 }
 
+.lp-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.lp-logo-text small {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
 .lp-nav-actions {
   display: flex;
   gap: 0.75rem;
@@ -2724,6 +2806,29 @@ footer {
 
 .lp-hero {
   padding: 96px 0 64px;
+}
+
+.lp-branding {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lp-brand-name {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #38bdf8, #a855f7);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.lp-brand-subtext {
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 560px;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .lp-pill {
@@ -3366,6 +3471,87 @@ footer {
 .waitlist-view-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
+}
+
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: grid;
+  place-items: center;
+  z-index: 1100;
+  padding: 1rem;
+}
+
+.delete-modal {
+  width: min(480px, 92vw);
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.delete-modal-header {
+  margin-bottom: 1.25rem;
+}
+
+.delete-modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.delete-modal-description {
+  font-size: 1rem;
+  color: #475569;
+  margin-bottom: 0.75rem;
+}
+
+.delete-modal-warning {
+  background: rgba(254, 202, 202, 0.4);
+  color: #991b1b;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.delete-modal-button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-modal-button-secondary {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.delete-modal-button-danger {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: white;
+  box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
+}
+
+.delete-modal-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .waitlist-modal-overlay {
