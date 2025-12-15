@@ -1,9 +1,9 @@
 import "./globals.css";
-import { AuthProvider } from "./AuthContext";
-import { GenerationProvider } from "./GenerationContext";
+import { AuthProvider } from "./contexts/auth/AuthContext";
+import { GenerationProvider } from "./contexts/generation/GenerationContext";
 
 export const metadata = {
-  title: "Validator",
+  title: "Buff Launch",
   description: "Valida tu idea en minutos",
 };
 

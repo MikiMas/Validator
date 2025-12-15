@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { getSupabaseAdminClient } from "./supabaseAdmin";
 
 /**
  * Extracts the bearer token from the request and validates it against Supabase.
@@ -18,7 +18,8 @@ export async function getUserFromRequest(req: Request) {
     return null;
   }
 
-  const { data, error } = await supabase.auth.getUser(token);
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
     return null;
   }

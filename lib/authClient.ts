@@ -23,7 +23,7 @@ export async function registerWithEmail(email: string, password: string) {
     throw error;
   }
 
-  // Login automático después del registro
+  // Automatic login after signup
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
     email,
     password,

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const authUser = await getUserFromRequest(request);
     if (!authUser) {
       return NextResponse.json(
-        { error: 'No autorizado' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -15,105 +15,105 @@ export async function POST(request: NextRequest) {
 
     if (!projectDescription || !projectName) {
       return NextResponse.json(
-        { error: 'Se requieren la descripción del proyecto y el nombre del proyecto' },
+        { error: 'Project description and project name are required' },
         { status: 400 }
       );
     }
 
-    // Prompt para generar contenido de landing page
-    const landingPrompt = `Eres un experto copywriter especializado en landing pages que convierten para startups.
+    // Prompt to generate landing page content
+    const landingPrompt = `You are an expert copywriter specializing in converting landing pages for startups.
 
-Basado en esta descripción del proyecto:
+Based on this project description:
 "${projectDescription}"
 
-Nombre del proyecto (referencia interna): "${projectName}"
+Project name (internal reference): "${projectName}"
 
-Analiza a fondo el proyecto y genera contenido que comunique CLARAMENTE la propuesta de valor única.
+Analyze the project in depth and generate content that CLEARLY communicates the unique value proposition.
 
-Identifica:
-1. El PROBLEMA específico que resuelve
-2. La SOLUCIÓN única que ofrece  
-3. El BENEFICIO principal para el usuario
-4. ¿Por qué es MEJOR que las alternativas existentes?
+Identify:
+1. The specific PROBLEM it solves
+2. The unique SOLUTION it offers
+3. The main BENEFIT for the user
+4. Why it is BETTER than existing alternatives?
 
-Genera contenido para una landing page minimalista y efectiva:
+Generate content for a minimalist and effective landing page:
 
-1. **Título Principal**: Debe comunicar el BENEFICIO principal, no el nombre del proyecto
-   - BAD: "Bienvenido a MiApp", "La Solución Definitiva"
-   - GOOD: "Reduce Tiempo 50%", "Facturación Automática", "Sin Más Deudores"
-   - Máximo 60 caracteres
+1. **Main Title**: Must communicate the main BENEFIT, not the project name
+   - BAD: "Welcome to MyApp", "The Definitive Solution"
+   - GOOD: "Reduce Time 50%", "Automatic Billing", "No More Debtors"
+   - Maximum 60 characters
 
-2. **Descripción**: Explica CLARAMENTE el problema y solución única
-   - Enfócate en el RESULTADO para el usuario
-   - Usa números específicos si es posible
-   - Menciona por qué es diferente/mejor
-   - 150-200 caracteres
+2. **Description**: Clearly explain the problem and unique solution
+   - Focus on the RESULT for the user
+   - Use specific numbers if possible
+   - Mention why it is different/better
+   - 150-200 characters
 
-3. **Oferta Waitlist**: Oferta irresistible que refleje el valor real
-   - Ejemplos: "Acceso anticipado + 30% descuento", "Prueba gratis 6 meses"
-   - Debe ser relevante al beneficio principal
+3. **Waitlist Offer**: Irresistible offer that reflects real value
+   - Examples: "Early access + 30% discount", "Free trial 6 months"
+   - Must be relevant to the main benefit
 
-Responde ÚNICAMENTE en formato JSON:
+Respond ONLY in JSON format:
 {
-  "ideaName": "Beneficio principal como título",
-  "ideaDescription": "Descripción enfocada en valor",
-  "waitlistOffer": "Oferta relevante al beneficio"
+  "ideaName": "Main benefit as title",
+  "ideaDescription": "Value-focused description",
+  "waitlistOffer": "Benefit-relevant offer"
 }
 
-EJEMPLOS por tipo de proyecto:
-- SaaS B2B: "Automatiza Facturación", "Reduce costes operativos 40%", "Demo gratis + 20% descuento"
-- App Productividad: "Recupera 10h/semana", "Organiza tu vida en 5 min/día", "Acceso anticipado premium"
-- Marketplace: "Precios 35% más baratos", "Sin comisiones ocultas nunca", "Registro gratis + envío gratis"
-- Educativo: "Aprende 3x más rápido", "Certificado en 2 semanas", "Primer curso gratis + 50% descuento"`;
+EXAMPLES by project type:
+- SaaS B2B: "Automate Billing", "Reduce operating costs 40%", "Free demo + 20% discount"
+- Productivity App: "Recover 10h/week", "Organize your life in 5 min/day", "Premium early access"
+- Marketplace: "35% cheaper prices", "Never hidden fees", "Free registration + free shipping"
+- Educational: "Learn 3x faster", "Certificate in 2 weeks", "First course free + 50% discount"`;
 
-    // Prompt para generar contenido del anuncio
-    const adPrompt = `Eres un experto en publicidad digital de Meta Ads especializado en crear anuncios que convierten.
+    // Prompt to generate ad content
+    const adPrompt = `You are an expert in Meta Ads digital advertising specializing in creating converting ads.
 
-Basado en esta descripción del proyecto:
+Based on this project description:
 "${projectDescription}"
 
-Nombre del proyecto: "${projectName}"
+Project name: "${projectName}"
 
-Analiza a fondo el proyecto y crea un anuncio que destaque SU PROPIA PROPOSICIÓN DE VALOR ÚNICA. NO uses frases genéricas.
+Analyze the project in depth and create an ad that highlights ITS OWN UNIQUE VALUE PROPOSITION. DO NOT use generic phrases.
 
-Identifica:
-1. El PROBLEMA específico que resuelve
-2. La SOLUCIÓN única que ofrece
-3. El BENEFICIO principal para el usuario
-4. ¿Por qué es MEJOR que las alternativas?
+Identify:
+1. The specific PROBLEM it solves
+2. The unique SOLUTION it offers
+3. The main BENEFIT for the user
+4. Why it is BETTER than alternatives?
 
-Genera contenido para un anuncio efectivo y ESPECÍFICO:
+Generate content for an effective and SPECIFIC ad:
 
-1. **Headline**: Título que comunique el beneficio principal (máximo 30 caracteres)
-   - Ejemplos BAD: "Descubre MiApp", "Innovación Tech"
-   - Ejemplos GOOD: "Reduce Costes 50%", "Automatiza Facturación", "Sin Más Deudores"
+1. **Headline**: Title that communicates the main benefit (maximum 30 characters)
+   - BAD examples: "Discover MyApp", "Tech Innovation"
+   - GOOD examples: "Reduce Costs 50%", "Automate Billing", "No More Debtors"
 
-2. **Mensaje**: Texto que explique CLARAMENTE la propuesta de valor (máximo 125 caracteres)
-   - Enfócate en el RESULTADO, no en la característica
-   - Usa números específicos si es posible
-   - Menciona el problema que resuelve
+2. **Message**: Text that CLEARLY explains the value proposition (maximum 125 characters)
+   - Focus on the RESULT, not the feature
+   - Use specific numbers if possible
+   - Mention the problem it solves
 
-3. **Imagen**: URL de una imagen de stock compatible con Meta Ads
-   - Debe representar el BENEFICIO final, no la tecnología
-   - Usa imágenes de personas si es B2C, negocios si es B2B
+3. **Image**: URL of a stock image compatible with Meta Ads
+   - Must represent the FINAL BENEFIT, not the technology
+   - Use images of people if B2C, businesses if B2B
 
-Para la imagen, usa URLs de Pexels o Pixabay con este formato:
-https://images.pexels.com/photos/[ID]/[descripcion].jpg
+For the image, use URLs from Pexels or Pixabay with this format:
+https://images.pexels.com/photos/[ID]/[description].jpg
 
-Responde ÚNICAMENTE en formato JSON:
+Respond ONLY in JSON format:
 {
-  "adHeadline": "Beneficio específico aquí",
-  "adMessage": "Propuesta de valor clara aquí",
-  "adPicture": "URL imagen aquí"
+  "adHeadline": "Specific benefit here",
+  "adMessage": "Clear value proposition here",
+  "adPicture": "Image URL here"
 }
 
-EJEMPLOS:
-- Si es app de gestión: "Gana 10h/semana", "Recupera tiempo perdido"
-- Si es SaaS B2B: "Reduce costes 30%", "Facturación automática"
-- Si es marketplace: "Precios 40% más baratos", "Sin comisiones ocultas"
-- Si es educativo: "Aprende 3x más rápido", "Certificado en 2 semanas"`;
+EXAMPLES:
+- If it's a management app: "Gain 10h/week", "Recover lost time"
+- If it's SaaS B2B: "Reduce costs 30%", "Automatic billing"
+- If it's marketplace: "40% cheaper prices", "No hidden fees"
+- If it's educational: "Learn 3x faster", "Certificate in 2 weeks"`;
 
-    // Llamadas a OpenAI
+    // OpenAI calls
     const [landingResponse, adResponse] = await Promise.all([
       fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -144,7 +144,7 @@ EJEMPLOS:
     ]);
 
     if (!landingResponse.ok || !adResponse.ok) {
-      throw new Error('Error al generar contenido con IA');
+      throw new Error('Error generating content with AI');
     }
 
     const [landingData, adData] = await Promise.all([
@@ -152,28 +152,28 @@ EJEMPLOS:
       adResponse.json(),
     ]);
 
-    // Parsear respuestas
+    // Parse responses
     let landingContent, adContent;
     
     try {
       landingContent = JSON.parse(landingData.choices[0].message.content);
     } catch (e) {
-      // Fallback si JSON no es válido - más específico basado en el proyecto
+      // Fallback if JSON is not valid - more specific based on the project
       const description = projectDescription.substring(0, 150);
       landingContent = {
-        ideaName: `Solución para ${projectName}`,
+        ideaName: `Solution for ${projectName}`,
         ideaDescription: description,
-        waitlistOffer: "Acceso anticipado con beneficios exclusivos"
+        waitlistOffer: "Early access with exclusive benefits"
       };
     }
 
     try {
       adContent = JSON.parse(adData.choices[0].message.content);
     } catch (e) {
-      // Fallback si JSON no es válido - más específico basado en el proyecto
+      // Fallback if JSON is not valid - more specific based on the project
       adContent = {
-        adHeadline: `Resuelve tu problema`,
-        adMessage: `La solución específica que necesitas. Regístrate ahora.`,
+        adHeadline: `Solve your problem`,
+        adMessage: `The specific solution you need. Register now.`,
         adPicture: "https://images.pexels.com/photos/3184418/pexels-photo.jpg"
       };
     }
@@ -181,25 +181,25 @@ EJEMPLOS:
     return NextResponse.json({
       landingContent: {
         ...landingContent,
-        sections: [] // Se pueden añadir secciones adicionales si se necesita
+        sections: [] // Additional sections can be added if needed
       },
       adContent
     });
 
   } catch (error: any) {
-    console.error('Error en generateContent:', error);
+    console.error('Error in generateContent:', error);
     
-    // Fallback básico si todo falla
+    // Basic fallback if everything fails
     return NextResponse.json({
       landingContent: {
-        ideaName: "Solución para tu proyecto",
-        ideaDescription: "La solución específica que necesitas",
-        waitlistOffer: "Acceso anticipado con beneficios exclusivos",
+        ideaName: "Solution for your project",
+        ideaDescription: "The specific solution you need",
+        waitlistOffer: "Early access with exclusive benefits",
         sections: []
       },
       adContent: {
-        adHeadline: "Resuelve tu problema ahora",
-        adMessage: "La solución específica que buscas. Regístrate gratis.",
+        adHeadline: "Solve your problem now",
+        adMessage: "The specific solution you're looking for. Register for free.",
         adPicture: "https://images.pexels.com/photos/3184418/pexels-photo.jpg"
       }
     });

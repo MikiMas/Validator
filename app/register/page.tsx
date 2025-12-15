@@ -19,7 +19,7 @@ export default function RegisterPage() {
       await registerWithEmail(email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err?.message ?? "No se ha podido registrar el usuario");
+      setError(err?.message ?? "Unable to register the user");
     } finally {
       setLoading(false);
     }
@@ -28,16 +28,16 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <main className="auth-layout">
-        {/* Panel izquierdo - Información */}
+      {/* Left panel - Information */}
         <section className="auth-panel auth-panel-info">
           <div>
             <div className="auth-kicker">
               <i className="fas fa-chart-line" />
               <span>Validator</span>
             </div>
-            <h1 className="auth-title">Crea una cuenta y empieza a validar tus ideas hoy</h1>
+            <h1 className="auth-title">Create an account and start validating your ideas today</h1>
             <p className="auth-description">
-              Genera landings atractivas y anuncios en Meta en cuestión de minutos. Sin desarrollo, solo resultados.
+              Generate attractive landing pages and Meta ads in minutes. No engineering, just results.
             </p>
 
             <div className="auth-bullets">
@@ -45,19 +45,19 @@ export default function RegisterPage() {
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Lanza campañas pequeñas para medir interés real.</p>
+                <p>Launch small campaigns to measure real interest.</p>
               </div>
               <div className="auth-bullet">
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Aprende qué mensaje conecta mejor con tu audiencia.</p>
+                <p>Learn which message connects best with your audience.</p>
               </div>
               <div className="auth-bullet">
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Valida antes de invertir tiempo y dinero en desarrollo.</p>
+                <p>Validate before investing time and money into development.</p>
               </div>
             </div>
           </div>
@@ -68,11 +68,11 @@ export default function RegisterPage() {
               <div className="auth-avatar">B</div>
               <div className="auth-avatar">C</div>
             </div>
-            <p className="text-sm">+500 emprendedores ya validan con nosotros</p>
+            <p className="text-sm">+500 founders already validate with us</p>
           </div>
         </section>
 
-        {/* Panel derecho - Formulario */}
+      {/* Right panel - Form */}
         <section className="auth-panel auth-panel-form">
           <div className="auth-header">
             <div className="auth-logo">
@@ -82,8 +82,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <h2 className="auth-title-main">Crear cuenta</h2>
-            <p className="auth-subtitle">Comienza a validar tus ideas en menos de un minuto.</p>
+            <h2 className="auth-title-main">Create account</h2>
+            <p className="auth-subtitle">Start validating ideas in under a minute.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
@@ -105,7 +105,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="auth-field">
-              <label>Contraseña</label>
+              <label>Password</label>
               <div className="auth-input-wrapper">
                 <input
                   type="password"
@@ -120,16 +120,16 @@ export default function RegisterPage() {
                 </div>
               </div>
               <p className="text-xs" style={{ color: "var(--text-light)", marginTop: "0.25rem" }}>
-                Mínimo 6 caracteres.
+                Minimum 6 characters.
               </p>
             </div>
 
             <div className="auth-checkbox">
               <input type="checkbox" id="terms" required />
               <label htmlFor="terms">
-                Acepto los {" "}
+                I accept the {" "}
                 <a href="/terms" className="auth-link-small">
-                  términos y condiciones
+                  terms and conditions
                 </a>
               </label>
             </div>
@@ -137,13 +137,13 @@ export default function RegisterPage() {
             {error && <div className="auth-error">{error}</div>}
 
             <button type="submit" className="auth-button-primary" disabled={loading}>
-              {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
+              {loading ? "Creating account..." : "Create account for free"}
             </button>
 
           </form>
 
           <p className="auth-footer-text">
-            ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+            Already have an account? <a href="/login">Log in</a>
           </p>
         </section>
       </main>

@@ -11,12 +11,12 @@ function buildHtml(landing: any, slug: string) {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
 
-  const heroTitle = escapeHtml(landing?.heroTitle ?? "Revoluciona tu Experiencia Digital");
+  const heroTitle = escapeHtml(landing?.heroTitle ?? "Revolutionize your digital experience");
   const heroDescription = escapeHtml(landing?.heroDescription ?? "");
-  const waitlistTitle = escapeHtml(landing?.waitlistTitle || "Únete a la lista de espera");
+  const waitlistTitle = escapeHtml(landing?.waitlistTitle || "Join the waitlist");
   const waitlistOffer = escapeHtml(
     landing?.waitlistOffer ||
-      "Sé el primero en acceder a nuestras funciones exclusivas y recibe un 20% de descuento en tu primer año."
+      "Be the first to access our exclusive features and receive a 20% discount on your first year."
   );
   const themeMode = landing?.theme === "light" ? "light" : "dark";
   const palettes: Record<
@@ -586,7 +586,7 @@ ${colorVars}
             <div class="hero-content">
                 <div class="hero-badge">
                     <i class="fas fa-sparkles"></i>
-                    <span>Próximamente disponible</span>
+                    <span>Coming soon</span>
                 </div>
                 
                 <h1 class="hero-title">
@@ -610,46 +610,46 @@ ${colorVars}
                             <div class="form-group">
                                 <label for="name" class="form-label">
                                     <i class="fas fa-user"></i>
-                                    Nombre completo
+                                    Full name
                                 </label>
                                 <div class="input-wrap">
                                     <span class="input-icon"><i class="fas fa-id-badge"></i></span>
-                                    <input type="text" id="name" class="form-input" placeholder="Tu nombre" required>
+                                    <input type="text" id="name" class="form-input" placeholder="Your name" required>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="email" class="form-label">
                                     <i class="fas fa-envelope"></i>
-                                    Correo electrónico
+                                    Email address
                                 </label>
                                 <div class="input-wrap">
                                     <span class="input-icon"><i class="fas fa-at"></i></span>
-                                    <input type="email" id="email" class="form-input" placeholder="tu@email.com" required>
+                                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-footer">
                             <i class="fas fa-shield-alt"></i>
-                            Usaremos tu correo solo para avisarte del lanzamiento. Sin spam.
+                            We'll only use your email to notify you about the launch. No spam.
                         </div>
 
                         <button type="submit" class="form-button" style="margin-top: 1.25rem;">
                             <i class="fas fa-paper-plane"></i>
-                            Unirme a la lista
+                            Join the waitlist
                         </button>
                     </form>
                     
                     <div class="success-message" style="display: none;">
                         <i class="fas fa-check-circle"></i>
-                        ¡Gracias por unirte! Te hemos enviado un correo de confirmación.
+                        Thanks for joining! We've sent you a confirmation email.
                     </div>
                 </div>
             </div>
         </section>
         
         <footer>
-            <p>&copy; ${year} ${heroTitle}. Todos los derechos reservados.</p>
+            <p>&copy; ${year} ${heroTitle}. All rights reserved.</p>
         </footer>
     </main>
     
@@ -659,7 +659,7 @@ ${colorVars}
             var heroTitleElement = document.querySelector('.hero-title');
             if (heroTitleElement) {
                 var pageTitle = heroTitleElement.textContent.trim();
-                if (pageTitle && pageTitle !== 'Revoluciona tu Experiencia Digital') {
+                if (pageTitle && pageTitle !== 'Revolutionize your digital experience') {
                     document.title = pageTitle;
                 }
             }
@@ -680,7 +680,7 @@ ${colorVars}
                 // Add loading state
                 var submitButton = form.querySelector('.form-button');
                 var originalContent = submitButton.innerHTML;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 submitButton.disabled = true;
 
                 try {
@@ -697,14 +697,14 @@ ${colorVars}
                         // Confetti effect (simple implementation)
                         createConfetti();
                     } else {
-                        throw new Error('Error al enviar el formulario');
+                        throw new Error('Error submitting the form');
                     }
                 } catch (error) {
                     console.error('Error al enviar el formulario:', error);
                     // Reset button on error
                     submitButton.innerHTML = originalContent;
                     submitButton.disabled = false;
-                    alert('Hubo un error al enviar tu solicitud. Por favor, inténtalo de nuevo.');
+                    alert('There was an error submitting your request. Please try again.');
                 }
             });
         });

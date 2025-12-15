@@ -35,7 +35,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
         throw error;
       }
 
-      console.log("[WaitlistForm] guardado OK en Supabase");
+      console.log("[WaitlistForm] saved successfully in Supabase");
       setSuccess(true);
       setName("");
       setEmail("");
@@ -43,8 +43,8 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
       // Confetti effect
       createConfetti();
     } catch (err: any) {
-      console.error("Error guardando waitlist", err);
-      const msg = err?.message ?? "Ha ocurrido un error. Inténtalo de nuevo.";
+      console.error("Error saving waitlist", err);
+      const msg = err?.message ?? "An error occurred. Please try again.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -304,31 +304,31 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
 
             {!success ? (
               <>
-                <h2 className="waitlist-title">Únete a la Lista de Espera</h2>
+                <h2 className="waitlist-title">Join the Waitlist</h2>
                 <p className="waitlist-description">
-                  Sé el primero en acceder cuando lancemos. Obtén acceso anticipado y beneficios exclusivos.
+                  Be the first to get access when we launch. Get early access and exclusive benefits.
                 </p>
 
                 <form onSubmit={handleSubmit} className="waitlist-form">
                   <div className="form-group">
-                    <label className="form-label">Nombre completo</label>
+                    <label className="form-label">Full name</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Tu nombre"
+                      placeholder="Your name"
                       required
                       className="form-input"
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Correo electrónico</label>
+                    <label className="form-label">Email address</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="tu@email.com"
+                      placeholder="you@example.com"
                       required
                       className="form-input"
                     />
@@ -340,7 +340,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 12a9 9 0 11-6.219-8.56"/>
                         </svg>
-                        Enviando...
+                        Sending...
                       </>
                     ) : (
                       <>
@@ -348,7 +348,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
                           <path d="M22 2L11 13"/>
                           <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
                         </svg>
-                        Unirme a la lista
+                        Join the waitlist
                       </>
                     )}
                   </button>
@@ -362,7 +362,7 @@ export default function WaitlistForm({ slug }: WaitlistFormProps) {
                   <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
                   <path d="M22 4L12 14.01l-3-3"/>
                 </svg>
-                ¡Gracias por unirte! Te hemos enviado un correo de confirmación.
+                Thanks for joining! We've sent you a confirmation email.
               </div>
             )}
           </div>

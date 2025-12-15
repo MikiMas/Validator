@@ -19,7 +19,7 @@ export default function LoginPage() {
       await loginWithEmail(email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err?.message ?? "No se ha podido iniciar sesión");
+      setError(err?.message ?? "Unable to log in");
     } finally {
       setLoading(false);
     }
@@ -28,16 +28,16 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <main className="auth-layout">
-        {/* Panel izquierdo - Información */}
+        {/* Left panel - Information */}
         <section className="auth-panel auth-panel-info">
           <div>
             <div className="auth-kicker">
               <i className="fas fa-chart-line" />
               <span>Validator</span>
             </div>
-            <h1 className="auth-title">Valida tu idea sin escribir una sola línea de código</h1>
+            <h1 className="auth-title">Validate your idea without writing a single line of code</h1>
             <p className="auth-description">
-              Crea landings, lanza anuncios en Meta y entiende en minutos si merece la pena invertir en tu próxima idea.
+              Build landing pages, launch Meta ads, and understand within minutes if your next idea is worth pursuing.
             </p>
 
             <div className="auth-bullets">
@@ -45,19 +45,19 @@ export default function LoginPage() {
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Feedback real de usuarios antes de construir el producto.</p>
+                <p>Get real user feedback before building the product.</p>
               </div>
               <div className="auth-bullet">
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Métricas claras de conversión de tus campañas.</p>
+                <p>See clear campaign conversion metrics.</p>
               </div>
               <div className="auth-bullet">
                 <span className="auth-bullet-icon">
                   <i className="fas fa-check" />
                 </span>
-                <p>Ahorra tiempo y recursos validando antes de desarrollar.</p>
+                <p>Save time and resources by validating before developing.</p>
               </div>
             </div>
           </div>
@@ -68,11 +68,11 @@ export default function LoginPage() {
               <div className="auth-avatar">B</div>
               <div className="auth-avatar">C</div>
             </div>
-            <p className="text-sm">+500 emprendedores ya validan con nosotros</p>
+            <p className="text-sm">+500 founders already validate with us</p>
           </div>
         </section>
 
-        {/* Panel derecho - Formulario */}
+        {/* Right panel - Form */}
         <section className="auth-panel auth-panel-form">
           <div className="auth-header">
             <div className="auth-logo">
@@ -82,8 +82,8 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <h2 className="auth-title-main">Inicia sesión</h2>
-            <p className="auth-subtitle">Entra en tu cuenta para seguir validando ideas.</p>
+            <h2 className="auth-title-main">Log in</h2>
+            <p className="auth-subtitle">Sign in to keep validating ideas.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
@@ -106,9 +106,9 @@ export default function LoginPage() {
 
             <div className="auth-field">
               <div className="auth-row">
-                <label>Contraseña</label>
+                <label>Password</label>
                 <a href="/forgot-password" className="auth-link-small">
-                  ¿Olvidaste tu contraseña?
+                  Forgot your password?
                 </a>
               </div>
               <div className="auth-input-wrapper">
@@ -129,20 +129,20 @@ export default function LoginPage() {
             <div className="auth-row">
               <div className="auth-checkbox">
                 <input type="checkbox" id="remember" />
-                <label htmlFor="remember">Recordarme</label>
+                <label htmlFor="remember">Remember me</label>
               </div>
             </div>
 
             {error && <div className="auth-error">{error}</div>}
 
             <button type="submit" className="auth-button-primary" disabled={loading}>
-              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+              {loading ? "Logging in..." : "Log in"}
             </button>
 
           </form>
 
           <p className="auth-footer-text">
-            ¿No tienes cuenta? <a href="/register">Regístrate gratis</a>
+            Don't have an account? <a href="/register">Sign up for free</a>
           </p>
         </section>
       </main>

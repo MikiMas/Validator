@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const authUser = await getUserFromRequest(req);
     if (!authUser) {
       return NextResponse.json(
-        { success: false, error: "No autorizado" },
+        { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     if (!dailyBudget || isNaN(dailyBudget) || dailyBudget < MIN_DAILY_BUDGET) {
       return NextResponse.json(
         { 
-          error: `El presupuesto diario mínimo es de ${MIN_DAILY_BUDGET}€`,
+          error: `The minimum daily budget is ${MIN_DAILY_BUDGET}€`,
           success: false
         },
         { status: 400 }
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { 
         success: false, 
-        error: "Error al calcular la estimación",
+        error: "Error calculating estimation",
         details: error.message 
       },
       { status: 500 }

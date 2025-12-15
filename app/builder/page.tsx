@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../AuthContext";
-import { useGeneration } from "../GenerationContext";
+import { useAuth } from "../contexts/auth/AuthContext";
+import { useGeneration } from "../contexts/generation/GenerationContext";
 
 function MultiStepBuilder() {
   const router = useRouter();
-  const { user, accessToken } = useAuth();
+  const { user, loading, accessToken } = useAuth();
   const { setStatus, setLastLandingSlug, setLastAdId } = useGeneration();
 
-  const [step, setStep] = useState<number>(0); // Step 0 = Descripción del proceso
+  const [step, setStep] = useState<number>(0); // Step 0 = Process overview
   const [submitting, setSubmitting] = useState(false);
 
   // Estados para contenido de landing escrito por usuario
@@ -23,17 +23,19 @@ function MultiStepBuilder() {
   // Estado para tema de color de la landing
   const [landingTheme, setLandingTheme] = useState<"dark" | "light">("dark");
 
-  // Estado para identificación interna del proyecto
+  // State for internal project identification
   const [projectName, setProjectName] = useState("");
   const [projectSlug, setProjectSlug] = useState("");
 
-  // Estado para validación de IA (solo verifica contenido apropiado)
+  // AI validation state (only checks that content is appropriate)
   const [validationLoading, setValidationLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validationPassed, setValidationPassed] = useState(false);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const [validationCategory, setValidationCategory] = useState<string | null>(null);
+  const [validationSuggestion, setValidationSuggestion] = useState<string | null>(null);
 
-  // Step 2: Configuración de Ads (solo para combo)
+  // Step 2: Ad configuration
   const [dailyBudget, setDailyBudget] = useState(10);
   const [campaignDuration, setCampaignDuration] = useState(7);
   const [adHeadline, setAdHeadline] = useState("");
@@ -41,12 +43,12 @@ function MultiStepBuilder() {
   const [adPicture, setAdPicture] = useState("");
   const [wantsAdPicture, setWantsAdPicture] = useState(false);
 
-  // Validación de Ads
+  // Ad validation
   const [adValidationLoading, setAdValidationLoading] = useState(false);
   const [adValidationError, setAdValidationError] = useState<string | null>(null);
   const [adValidationPassed, setAdValidationPassed] = useState(false);
 
-  // Estimación de impresiones
+  // Impressions estimation
   const [estimation, setEstimation] = useState<{
     loading: boolean;
     data: {
@@ -67,7 +69,7 @@ function MultiStepBuilder() {
       setEstimation({
         loading: false,
         data: null,
-        error: "El presupuesto mínimo es de 1€"
+        error: "The minimum budget is €1"
       });
       return;
     }
@@ -87,7 +89,7 @@ function MultiStepBuilder() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al calcular la estimación');
+        throw new Error(data.error || "Error calculating the estimate");
       }
 
       setEstimation({
@@ -102,7 +104,7 @@ function MultiStepBuilder() {
         error: null
       });
     } catch (error: any) {
-      console.error('Error al estimar impresiones:', error);
+      console.error('Error estimating impressions:', error);
       setEstimation({
         loading: false,
         data: null,
@@ -111,32 +113,36 @@ function MultiStepBuilder() {
     }
   }, [accessToken]);
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [loading, router, user]);
 
-  // Función para validar contenido de landing con IA (solo verifica apropiado)
+  // Function to validate landing content with AI (only checks for appropriateness)
   const validateLandingContent = async () => {
     if (!projectName.trim()) {
-      setValidationError("Por favor, completa el nombre del proyecto");
+      setValidationError("Please provide the project name");
       return false;
     }
 
     const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
     if (!projectSlug.trim() || !slugPattern.test(projectSlug)) {
-      setValidationError("Elige una URL válida (solo minúsculas, números y guiones)");
+      setValidationError("Choose a valid URL (lowercase letters, numbers, and dashes only)");
       return false;
     }
 
     if (!landingTitle.trim() || !landingDescription.trim()) {
-      setValidationError("Por favor, completa el título y la descripción principal");
+      setValidationError("Please fill out the main headline and description");
       return false;
     }
 
     setValidationLoading(true);
     setValidationError(null);
     setValidationWarnings([]);
+    setValidationPassed(false);
+    setValidationCategory(null);
+    setValidationSuggestion(null);
 
     try {
       const response = await fetch('/api/validateContent', {
@@ -156,7 +162,7 @@ function MultiStepBuilder() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al validar el contenido');
+        throw new Error(data.error || "Error validating the content");
       }
 
       if (data.valid) {
@@ -166,22 +172,26 @@ function MultiStepBuilder() {
         }
         return true;
       } else {
-        setValidationError(data.reason || 'El contenido no es apropiado');
+        setValidationError(data.reason || "The content is not appropriate");
+        setValidationCategory(data.category || null);
+        setValidationSuggestion(data.suggestion || null);
         return false;
       }
     } catch (error: any) {
-      console.error('Error en validación de contenido:', error);
-      setValidationError('Error al validar el contenido. Por favor, inténtalo de nuevo.');
+      console.error('Error validating content:', error);
+      setValidationError('Error validating the content. Please try again.');
+      setValidationCategory(null);
+      setValidationSuggestion(null);
       return false;
     } finally {
       setValidationLoading(false);
     }
   };
 
-  // Validación de contenido de anuncio con IA
+  // AI-based ad content validation
   const validateAdContent = async () => {
     if (!adHeadline.trim() || !adMessage.trim()) {
-      setAdValidationError("Por favor, completa el título y el mensaje del anuncio");
+      setAdValidationError("Please complete the ad headline and message");
       return false;
     }
 
@@ -205,34 +215,34 @@ function MultiStepBuilder() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al validar el anuncio');
+        throw new Error(data.error || "Error validating the ad");
       }
 
       if (data.valid) {
         setAdValidationPassed(true);
         return true;
       } else {
-        setAdValidationError(data.reason || 'El contenido del anuncio no es apropiado');
+        setAdValidationError(data.reason || "The ad content is not appropriate");
         return false;
       }
     } catch (error: any) {
-      console.error('Error en validación de anuncio:', error);
-      setAdValidationError('Error al validar el anuncio. Por favor, inténtalo de nuevo.');
+      console.error('Error validating ad content:', error);
+      setAdValidationError('Error validating the ad. Please try again.');
       return false;
     } finally {
       setAdValidationLoading(false);
     }
   };
 
-  // Navegación entre steps
+  // Step navigation
   const nextStep = async () => {
-    // Validación del contenido de landing (primer paso después de la introducción)
+    // Landing content validation (first step after the introduction)
     if (step === 1) {
       const isValid = await validateLandingContent();
       if (!isValid) return;
     }
 
-    // Validación del anuncio
+    // Ad validation
     if (step === 3) {
       const isValid = await validateAdContent();
       if (!isValid) return;
@@ -242,7 +252,7 @@ function MultiStepBuilder() {
     setValidationError(null);
     setAdValidationError(null);
 
-    // Solo avanzar si no estamos en el último paso
+    // Only proceed if not on the last step
     if (step < totalSteps - 1) setStep(step + 1);
   };
 
@@ -251,7 +261,7 @@ function MultiStepBuilder() {
   };
 
 
-  // Efecto para la estimación con debounce
+  // Debounced estimation effect
   useEffect(() => {
     if (!user) return;
     let isMounted = true;
@@ -287,7 +297,7 @@ function MultiStepBuilder() {
     setLastAdId(null);
 
     try {
-      // Generar landing y campaña en un solo endpoint
+      // Generate landing and campaign in a single endpoint
       const response = await fetch("/api/generateLanding", {
         method: "POST",
         headers: {
@@ -295,14 +305,13 @@ function MultiStepBuilder() {
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
-          mode: "combo",
           ideaName: projectName,
           ideaDescription: landingDescription,
           waitlistOffer: hasLandingOffer ? landingOfferText : "",
           landingTitle,
           landingWaitlistText,
           customSlug: projectSlug,
-          landingTheme, // Añadir el tema seleccionado
+          landingTheme, // Add the selected theme
           campaignSettings: {
             durationDays: campaignDuration,
             dailyBudget: dailyBudget,
@@ -316,7 +325,7 @@ function MultiStepBuilder() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al crear el proyecto");
+        throw new Error(errorData.error || "Error creating the project");
       }
 
       const data = await response.json();
@@ -330,10 +339,10 @@ function MultiStepBuilder() {
         router.push("/");
       }
     } catch (error: any) {
-      console.error('Error al crear proyecto:', error);
+      console.error('Error creating project:', error);
       setStatus("error");
       // Show error message to user
-      setValidationError(error.message || "Error al procesar la solicitud. Por favor, inténtalo de nuevo.");
+      setValidationError(error.message || "Error processing the request. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -347,9 +356,9 @@ function MultiStepBuilder() {
             <div className="builder-logo">
               <i className="fas fa-rocket" />
             </div>
-            <h1 className="builder-title">Valida tu Startup</h1>
+            <h1 className="builder-title">Validate your venture</h1>
             <p className="builder-subtitle">
-              Describe tu proyecto y deja que la IA cree todo el contenido por ti.
+              Describe your project and let AI craft all the content for you.
             </p>
           </div>
 
@@ -358,12 +367,12 @@ function MultiStepBuilder() {
           </div>
 
           <form className="builder-form" onSubmit={handleSubmit}>
-                        {/* Step 0: Descripci?n del proceso */}
+                        {/* Step 0: Process overview */}
             {step === 0 && (
               <div className="builder-form-grid">
-                <div className="builder-section-title">
+                  <div className="builder-section-title">
                   <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
-                  Cómo creamos tu landing + anuncios?
+                  How we build your landing page + ads?
                 </div>
 
                 <div className="builder-field builder-field-full">
@@ -384,10 +393,10 @@ function MultiStepBuilder() {
                         }}>
                           1
                         </div>
-                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Tu idea</strong>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Your idea</strong>
                       </div>
-                      <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
-                        Define el título y la descrpción que aparecerá en tu landing.</p>
+                        <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
+                        Define the headline and description that will appear on your landing page.</p>
                     </div>
                     <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
@@ -405,10 +414,10 @@ function MultiStepBuilder() {
                         }}>
                           2
                         </div>
-                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Landing generada por IA</strong>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>AI-generated landing page</strong>
                       </div>
                       <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
-                        Nuestra IA crea el landing con el título, la descripción y la waitlist en unos instantes.</p>
+                        Our AI creates the landing page with the headline, description, and waitlist in moments.</p>
                     </div>
                     <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
@@ -426,10 +435,10 @@ function MultiStepBuilder() {
                         }}>
                           3
                         </div>
-                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Campaña de anuncios</strong>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Ad campaign</strong>
                       </div>
                       <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
-                        Elige presupuesto, duración y redactamos el título y el mensaje de tu anuncio para atraer tráfico relevante.
+                        Pick budget and duration while we write the ad headline and copy to attract relevant traffic.
                       </p>
                     </div>
                     <div style={{ padding: "2rem", borderRadius: "1rem", border: "1px solid #e2e8f0", background: "#fff", minHeight: "180px" }}>
@@ -448,47 +457,47 @@ function MultiStepBuilder() {
                         }}>
                           4
                         </div>
-                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Revisión y lanzamiento</strong>
+                        <strong style={{ fontSize: "1.1rem", color: "#1e293b" }}>Review & launch</strong>
                       </div>
                       <p style={{ margin: "0", color: "#475569", lineHeight: "1.5" }}>
-                        Te mostramos un resumen con todo lo generado antes de crear el proyecto y lanzarlo automáticamente.
+                        We show a summary of everything generated before creating the project and launching it automatically.
                       </p>
                     </div>
                   </div>
                   <div className="builder-field-hint" style={{ marginTop: "1.5rem" }}>
                     <i className="fas fa-info-circle" style={{ marginRight: "0.5rem" }}></i>
-                    Avanzamos paso a paso para que tengas control y visibilidad del resultado.
+                    We move step by step so you stay in control and can see the outcome.
                   </div>
                 </div>
               </div>
             )}
 
-{/* Step 1: Contenido de Landing con Preview */}
+                  {/* Step 1: Landing content with preview */}
             {step === 1 && (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start" }}>
-                  {/* Panel de Edición */}
+                  {/* Editing panel */}
                   <div>
                     <div className="builder-section-title">
                       <i className="fas fa-edit" style={{ marginRight: "0.5rem" }}></i>
-                      Escribe el Contenido de tu Landing
+                      Write your landing page content
                     </div>
                     <p className="builder-field-hint">
-                      Escribe exactamente lo que quieres que aparezca en tu landing. Tú tienes el control total.
+                      Type exactly what you want to show on your landing page. You stay in full control.
                     </p>
 
                     <div className="builder-form-grid" style={{ gridTemplateColumns: "1fr" }}>
                       <div className="builder-field builder-field-full">
                         <label className="builder-label" htmlFor="landingTitle">
                           <i className="fas fa-heading" style={{ marginRight: "0.5rem" }}></i>
-                          Título Principal *
+                          Main headline *
                         </label>
                         <div className="builder-input-wrapper">
                           <input
                             id="landingTitle"
                             type="text"
                             className="builder-input"
-                            placeholder="Ej: La revolucionaria app que cambia todo"
+                            placeholder="e.g., The revolutionary app that changes everything"
                             required
                             value={landingTitle}
                             onChange={(e) => {
@@ -502,7 +511,7 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          El título principal que verán los visitantes.
+                          The main headline visitors will see.
                           <span style={{ 
                             float: 'right', 
                             color: landingTitle.length === 40 ? '#dc2626' : '#6b7280',
@@ -517,13 +526,13 @@ function MultiStepBuilder() {
                       <div className="builder-field builder-field-full">
                         <label className="builder-label" htmlFor="landingDescription">
                           <i className="fas fa-align-left" style={{ marginRight: "0.5rem" }}></i>
-                          Descripción Principal *
+                          Primary description *
                         </label>
                         <div className="builder-input-wrapper">
                           <textarea
                             id="landingDescription"
                             className="builder-textarea"
-                            placeholder="Describe tu producto o servicio de forma clara y atractiva..."
+                            placeholder="Describe your product or service clearly and compellingly..."
                             required
                             value={landingDescription}
                             onChange={(e) => {
@@ -538,7 +547,7 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          Explica qué ofreces, para quién es y por qué es especial.
+                          Explain what you offer, who it's for, and why it's special.
                           <span style={{ 
                             float: 'right', 
                             color: landingDescription.length === 600 ? '#dc2626' : '#6b7280',
@@ -553,14 +562,14 @@ function MultiStepBuilder() {
                       <div className="builder-field builder-field-full">
                         <label className="builder-label" htmlFor="landingWaitlistText">
                           <i className="fas fa-users" style={{ marginRight: "0.5rem" }}></i>
-                          Texto de Waitlist *
+                          Waitlist text *
                         </label>
                         <div className="builder-input-wrapper">
                           <input
                             id="landingWaitlistText"
                             type="text"
                             className="builder-input"
-                            placeholder="Ej: Únete a la lista de espera y sé el primero en probarlo"
+                            placeholder="e.g., Join the waitlist and be the first to test it"
                             required
                             value={landingWaitlistText}
                             onChange={(e) => {
@@ -574,7 +583,7 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          El texto que motivará a los usuarios a registrarse.
+                          Text that will motivate visitors to sign up.
                           <span style={{ 
                             float: 'right', 
                             color: landingWaitlistText.length === 60 ? '#dc2626' : '#6b7280',
@@ -590,13 +599,13 @@ function MultiStepBuilder() {
                         <div className="switch-container">
                           <span className="switch-label">
                             <i className="fas fa-gift" style={{ marginRight: "0.5rem" }}></i>
-                            ¿Quieres incluir una oferta especial?
+                            Want to include a special offer?
                           </span>
                           <button
                             type="button"
                             className={`switch ${hasLandingOffer ? 'active' : ''}`}
                             onClick={() => setHasLandingOffer(!hasLandingOffer)}
-                            aria-label="Toggle landing offer"
+                            aria-label="Toggle landing page offer"
                           />
                         </div>
                       </div>
@@ -605,14 +614,14 @@ function MultiStepBuilder() {
                         <div className="builder-field builder-field-full">
                           <label className="builder-label" htmlFor="landingOfferText">
                             <i className="fas fa-tag" style={{ marginRight: "0.5rem" }}></i>
-                            Texto de la Oferta *
+                            Offer text *
                           </label>
                           <div className="builder-input-wrapper">
                             <input
                               id="landingOfferText"
                               type="text"
                               className="builder-input"
-                              placeholder="Ej: 20% de descuento en el lanzamiento, acceso anticipado..."
+                              placeholder="e.g., 20% launch discount, early access..."
                               required
                               value={landingOfferText}
                               onChange={(e) => {
@@ -626,7 +635,7 @@ function MultiStepBuilder() {
                             </span>
                           </div>
                           <div className="builder-field-hint">
-                            Describe la oferta especial para los primeros usuarios.
+                            Describe the special offer for early users.
                             <span style={{ 
                               float: 'right', 
                               color: landingOfferText.length === 80 ? '#dc2626' : '#6b7280',
@@ -642,10 +651,10 @@ function MultiStepBuilder() {
                       <div className="builder-field builder-field-full">
                         <div className="builder-section-title" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
                           <i className="fas fa-palette" style={{ marginRight: "0.5rem" }}></i>
-                          Tema de la Landing
+                          Landing theme
                         </div>
                         <p className="builder-field-hint" style={{ marginBottom: "1rem" }}>
-                          Elige el estilo visual que prefieres para tu landing page.
+                          Choose the visual style you prefer for your landing page.
                         </p>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
                           {/* Tema Oscuro */}
@@ -666,10 +675,10 @@ function MultiStepBuilder() {
                               marginBottom: "1rem"
                             }}>
                               <i className="fas fa-moon" style={{ marginRight: "0.5rem" }}></i>
-                              Tema Oscuro
+                              Dark theme
                             </div>
                             <div style={{ fontSize: "0.9rem", marginBottom: "1rem", lineHeight: "1.5" }}>
-                              Diseño moderno y elegante con fondo oscuro y elementos brillantes. Ideal para tecnología y productos premium.
+                              Modern, elegant design with a dark background and bright elements. Ideal for tech and premium products.
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                               <div style={{
@@ -718,10 +727,10 @@ function MultiStepBuilder() {
                               marginBottom: "1rem"
                             }}>
                               <i className="fas fa-sun" style={{ marginRight: "0.5rem" }}></i>
-                              Tema Claro
+                              Light theme
                             </div>
                             <div style={{ fontSize: "0.9rem", marginBottom: "1rem", lineHeight: "1.5" }}>
-                              Diseño limpio y accesible con fondo blanco y acentos verdes. Perfecto para productos amigables y corporativos.
+                              Clean, accessible layout with a white background and green accents. Perfect for friendly or corporate products.
                             </div>
                             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                               <div style={{
@@ -756,15 +765,15 @@ function MultiStepBuilder() {
                     </div>
                   </div>
 
-                  {/* Panel de Preview */}
+                  {/* Panel de vista previa */}
                   <div style={{ minWidth: 0 }}>
                     <div className="builder-section-title">
                       <i className="fas fa-eye" style={{ marginRight: "0.5rem" }}></i>
-                      Preview de tu Landing
+                      Landing page preview
                     </div>
                     <p className="builder-field-hint">
-                      Así se verá tu landing page en versión mobile.
-                      Recuerda que el diseño puede variar dependiendo de la resolución de la pantalla.
+                      This is how your landing page will look on mobile.
+                      Design may vary depending on the viewer's screen resolution.
                     </p>
 
                     <div style={{
@@ -837,7 +846,7 @@ function MultiStepBuilder() {
                         }}></div>
                       </div>
 
-                      {/* Contenido principal */}
+                      {/* Content principal */}
                       <div style={{
                         position: 'relative',
                         zIndex: 2,
@@ -869,10 +878,10 @@ function MultiStepBuilder() {
                           marginBottom: '2rem'
                         }}>
                           <i className="fas fa-sparkles" />
-                          <span>Próximamente disponible</span>
+                          <span>Coming soon</span>
                         </div>
 
-                        {/* Título */}
+                        {/* Title */}
                         <h1 style={{
                             fontSize: '2.5rem',
                             fontWeight: '800',
@@ -888,10 +897,10 @@ function MultiStepBuilder() {
                             wordBreak: 'break-word',
                             whiteSpace: 'normal'
                         }}>
-                          {landingTitle || "Tu título aparecerá aquí"}
+                          {landingTitle || "Your headline will appear here"}
                       </h1>
 
-                        {/* Descripción */}
+                        {/* Description */}
                         <p style={{
                             fontSize: '1.2rem',
                             color: landingTheme === 'dark'
@@ -905,10 +914,10 @@ function MultiStepBuilder() {
                             overflowWrap: 'break-word',
                             wordBreak: 'break-word'
                         }}>
-                          {landingDescription || "Tu descripción aparecerá aquí..."}
+                          {landingDescription || "Your description will appear here..."}
                       </p>
 
-                        {/* Tarjeta de waitlist */}
+                        {/* Tarjeta de lista de espera */}
                       <div style={{
                           width: '100%',
                           maxWidth: '34rem',
@@ -960,7 +969,7 @@ function MultiStepBuilder() {
                           <i className="fas fa-users" />
                         </div>
 
-                          {/* Título de waitlist */}
+                          {/* Waitlist title */}
                         <h2 style={{
                             fontSize: '1.5rem',
                             fontWeight: '800',
@@ -969,7 +978,7 @@ function MultiStepBuilder() {
                             textAlign: 'center',
                             lineHeight: '1.2'
                         }}>
-                          {landingWaitlistText || "Texto de waitlist"}
+                          {landingWaitlistText || "Waitlist copy"}
                         </h2>
 
                           {/* Texto de oferta */}
@@ -982,7 +991,7 @@ function MultiStepBuilder() {
                             fontSize: '1rem',
                             lineHeight: '1.6'
                         }}>
-                          Sé el primero en acceder cuando lancemos. Obtén acceso anticipado y beneficios exclusivos.
+                          Be the first to access features when we launch. Gain early access and exclusive perks.
                         </p>
 
                           {/* Formulario */}
@@ -998,8 +1007,8 @@ function MultiStepBuilder() {
                                   alignItems: 'center',
                                   gap: '0.35rem'
                             }}>
-                                  <i className="fas fa-user" />
-                              Nombre completo
+                              <i className="fas fa-user" />
+                              Full name
                             </label>
                                 <div style={{ position: 'relative' }}>
                                   <span style={{
@@ -1015,9 +1024,9 @@ function MultiStepBuilder() {
                                   }}>
                                     <i className="fas fa-id-badge" />
                                   </span>
-                            <input
-                              type="text"
-                              placeholder="Tu nombre"
+                              <input
+                                type="text"
+                                placeholder="Your name"
                               disabled
                               style={{
                                       width: '100%',
@@ -1051,8 +1060,8 @@ function MultiStepBuilder() {
                                   alignItems: 'center',
                                   gap: '0.35rem'
                             }}>
-                                  <i className="fas fa-envelope" />
-                              Correo electrónico
+                              <i className="fas fa-envelope" />
+                              Email address
                             </label>
                                 <div style={{ position: 'relative' }}>
                                   <span style={{
@@ -1068,9 +1077,9 @@ function MultiStepBuilder() {
                                   }}>
                                     <i className="fas fa-at" />
                                   </span>
-                            <input
-                              type="email"
-                              placeholder="tu@email.com"
+                              <input
+                                type="email"
+                                placeholder="you@example.com"
                               disabled
                               style={{
                                       width: '100%',
@@ -1124,7 +1133,7 @@ function MultiStepBuilder() {
                             }}
                           >
                             <i className="fas fa-paper-plane" />
-                            Unirme a la lista
+                            Join the list
                           </button>
                         </form>
                         </div>
@@ -1155,16 +1164,16 @@ function MultiStepBuilder() {
 
                     <div className="builder-form-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem", marginTop: "1.5rem" }}>
                       <div className="builder-field builder-field-full">
-                        <label className="builder-label" htmlFor="projectName">
-                          <i className="fas fa-tag" style={{ marginRight: "0.5rem" }}></i>
-                          Nombre del Experimento *
+                          <label className="builder-label" htmlFor="projectName">
+                            <i className="fas fa-tag" style={{ marginRight: "0.5rem" }}></i>
+                            Experiment name *
                         </label>
                         <div className="builder-input-wrapper">
                           <input
                             id="projectName"
                             type="text"
                             className="builder-input"
-                            placeholder="Ej: MiApp Startup"
+                            placeholder="Ej: MiApp Emprendimiento"
                             required
                             value={projectName}
                             onChange={(e) => setProjectName(e.target.value)}
@@ -1174,21 +1183,21 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          Solo lo verás tú en el panel.
+                        Only you will see it in the dashboard.
                         </div>
                       </div>
 
                       <div className="builder-field builder-field-full">
                         <label className="builder-label" htmlFor="projectSlug">
                           <i className="fas fa-link" style={{ marginRight: "0.5rem" }}></i>
-                          URL personalizada *
+                          Custom URL *
                         </label>
                         <div className="builder-input-wrapper">
                           <input
                             id="projectSlug"
                             type="text"
                             className="builder-input"
-                            placeholder="ej: mi-landing"
+                            placeholder="e.g., my-page"
                             required
                             value={projectSlug}
                             onChange={(e) => {
@@ -1205,14 +1214,14 @@ function MultiStepBuilder() {
                           </span>
                         </div>
                         <div className="builder-field-hint">
-                          Tu landing estará en: <strong>vakant.es/{projectSlug || "tu-url"}</strong> (solo minúsculas, números y guiones). Comprobamos que no exista otra igual antes de guardar.
+                          Your landing page will be at: <strong>bufflaunch.com/{projectSlug || "your-url"}</strong> (lowercase letters, numbers, and dashes only). We check for duplicates before saving.
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Validación de Contenido */}
+                {/* Content validation */}
                 {(validationLoading || validationError || validationPassed || validationWarnings.length > 0) && (
                   <div style={{ gridColumn: "1 / -1", marginTop: "2rem" }}>
                     <div className="builder-estimation-card" style={{
@@ -1239,13 +1248,13 @@ function MultiStepBuilder() {
                         {validationPassed && (
                           <>
                             <i className="fas fa-check-circle" style={{ marginRight: "0.5rem" }}></i>
-                            Contenido aprobado
+                            Content aprobado
                           </>
                         )}
                         {validationError && (
                           <>
                             <i className="fas fa-exclamation-triangle" style={{ marginRight: "0.5rem" }}></i>
-                            Validación requerida
+                            Validation required
                           </>
                         )}
                       </div>
@@ -1253,19 +1262,19 @@ function MultiStepBuilder() {
                       {validationLoading && (
                         <div className="builder-estimation-loading">
                           <div className="builder-spinner"></div>
-                          Analizando si el contenido es apropiado y cumple con las políticas...
+                          Analyzing if the content is appropriate and meets the policies...
                         </div>
                       )}
 
                       {validationPassed && (
                         <div>
                           <p style={{ fontSize: "0.9rem", color: "#16a34a", marginBottom: "0.5rem" }}>
-                            ✅ Tu contenido es apropiado y cumple con nuestras políticas de uso.
+                            ✅ Your content is appropriate and meets our usage policies.
                           </p>
                           {validationWarnings.length > 0 && (
                             <div style={{ marginTop: "1rem" }}>
                               <p style={{ fontSize: "0.85rem", color: "#f59e0b", marginBottom: "0.5rem" }}>
-                                ⚠️ Recomendaciones:
+                                ⚠ Recommendations:
                               </p>
                               {validationWarnings.map((warning, index) => (
                                 <p key={index} style={{ fontSize: "0.8rem", color: "#374151", marginBottom: "0.25rem" }}>
@@ -1280,8 +1289,18 @@ function MultiStepBuilder() {
                       {validationError && (
                         <div style={{ fontSize: "0.9rem", color: "#dc2626" }}>
                           <p style={{ marginBottom: "0.5rem" }}>
-                            ❌ {validationError}
+                            ✖ {validationError}
                           </p>
+                          {validationCategory && (
+                            <p style={{ marginBottom: "0.25rem", fontSize: "0.8rem", color: "#b91c1c" }}>
+                              Categoría: {validationCategory}
+                            </p>
+                          )}
+                          {validationSuggestion && (
+                            <p style={{ marginBottom: "0.5rem", fontSize: "0.8rem", color: "#b91c1c" }}>
+                              Sugerencia: {validationSuggestion}
+                            </p>
+                          )}
                           <p style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "0.5rem" }}>
                             Por favor, modifica el contenido para asegurar que sea apropiado.
                           </p>
@@ -1292,21 +1311,21 @@ function MultiStepBuilder() {
                 )}
               </>)}
 
-            {/* Step 2: Configuración de Ads */}
+            {/* Step 2: Ad configuration */}
             {step === 2 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-chart-line" style={{ marginRight: "0.5rem" }}></i>
-                  Configuración de Campaña
+                  Campaign configuration
                 </div>
                 <p className="builder-field-hint">
-                  Define tu inversión y duración. Te mostraremos estimaciones de alcance y rendimiento.
+                  Define your investment and duration. We will show reach and performance estimates.
                 </p>
 
                 <div className="builder-field">
                   <label className="builder-label" htmlFor="dailyBudget">
                     <i className="fas fa-euro-sign" style={{ marginRight: "0.5rem" }}></i>
-                    Presupuesto Diario (€) *
+                    Daily Budget (€) *
                   </label>
                   <div className="builder-input-wrapper">
                     <input
@@ -1325,14 +1344,14 @@ function MultiStepBuilder() {
                     </span>
                   </div>
                   <div className="builder-field-hint">
-                    Mínimo 1€ por día. Presupuesto recomendado: 5-10€ para empezar.
+                    Minimum €1 per day. Recommended budget: €5-10 to start.
                   </div>
                 </div>
 
                 <div className="builder-field">
                   <label className="builder-label" htmlFor="campaignDuration">
                     <i className="fas fa-calendar-days" style={{ marginRight: "0.5rem" }}></i>
-                    Duración (días) *
+                    Duration (days) *
                   </label>
                   <div className="builder-input-wrapper">
                     <input
@@ -1354,7 +1373,7 @@ function MultiStepBuilder() {
                     </span>
                   </div>
                   <div className="builder-field-hint">
-                    Duración recomendada: 7-14 días para testear.
+                    Recommended duration: 7-14 days to test.
                   </div>
                 </div>
 
@@ -1364,7 +1383,7 @@ function MultiStepBuilder() {
                     <div className="builder-estimation-card">
                       <div className="builder-estimation-title">
                         <i className="fas fa-chart-bar" style={{ marginRight: "0.5rem" }}></i>
-                        Estimaciones de Campaña
+                        Campaign estimates
                       </div>
                       <div className="builder-estimation-grid">
                         <div className="builder-estimation-item">
@@ -1381,7 +1400,7 @@ function MultiStepBuilder() {
                         </div>
                         <div className="builder-estimation-item">
                           <div className="builder-estimation-value">€{(dailyBudget * campaignDuration).toFixed(2)}</div>
-                          <div className="builder-estimation-label">Inversión Total</div>
+                          <div className="builder-estimation-label">Total investment</div>
                         </div>
                       </div>
                     </div>
@@ -1390,28 +1409,28 @@ function MultiStepBuilder() {
               </div>
             )}
 
-            {/* Step 3: Creación de Anuncio */}
+            {/* Step 3: Ad creation */}
             {step === 3 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-bullhorn" style={{ marginRight: "0.5rem" }}></i>
                   Crea tu Anuncio
                 </div>
-                <p className="builder-field-hint">
-                  Escribe el título y mensaje de tu anuncio. La IA validará que sea apropiado antes de publicarlo.
+                  <p className="builder-field-hint">
+                  Write your ad headline and message. AI will verify it is appropriate before publishing.
                 </p>
 
                 <div className="builder-field builder-field-full">
-                  <label className="builder-label" htmlFor="adHeadline">
-                    <i className="fas fa-heading" style={{ marginRight: "0.5rem" }}></i>
-                    Título del Anuncio *
-                  </label>
+                          <label className="builder-label" htmlFor="adHeadline">
+                            <i className="fas fa-heading" style={{ marginRight: "0.5rem" }}></i>
+                            Ad headline *
+                          </label>
                   <div className="builder-input-wrapper">
                     <input
                       id="adHeadline"
                       type="text"
                       className="builder-input"
-                      placeholder="Ej: ¿Quieres validar tu idea de negocio?"
+                      placeholder="e.g., Want to validate your business idea?"
                       maxLength={100}
                       value={adHeadline}
                       onChange={(e) => {
@@ -1424,23 +1443,23 @@ function MultiStepBuilder() {
                       <i className="fas fa-heading" />
                     </span>
                   </div>
-                  <div className="builder-field-hint">
-                    Máximo 100 caracteres. Sé claro y directo.
-                  </div>
+                    <div className="builder-field-hint">
+                      Maximum 100 characters. Be clear and direct.
+                    </div>
                 </div>
 
                 <div className="builder-field builder-field-full">
-                  <label className="builder-label" htmlFor="adMessage">
-                    <i className="fas fa-comment-alt" style={{ marginRight: "0.5rem" }}></i>
-                    Mensaje del Anuncio *
-                  </label>
+                          <label className="builder-label" htmlFor="adMessage">
+                            <i className="fas fa-comment-alt" style={{ marginRight: "0.5rem" }}></i>
+                            Ad message *
+                          </label>
                   <div className="builder-input-wrapper">
-                    <textarea
-                      id="adMessage"
-                      className="builder-textarea"
-                      placeholder="Describe tu proyecto y por qué debería unirse a tu waitlist...
+                      <textarea
+                        id="adMessage"
+                        className="builder-textarea"
+                        placeholder="Describe your project and why people should join your waitlist...
 
-Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu landing page profesional y atrae los primeros clientes en menos de 24h."
+e.g., Discover how to validate your venture before investing time and money. Create a professional landing page and attract your first customers in under 24h."
                       maxLength={300}
                       rows={4}
                       value={adMessage}
@@ -1455,7 +1474,7 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                     </span>
                   </div>
                   <div className="builder-field-hint">
-                    Máximo 300 caracteres. Incluye una llamada a la acción clara.
+                    Maximum 300 characters. Include a clear call to action.
                   </div>
                 </div>
 
@@ -1463,17 +1482,17 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                   <div className="switch-container">
                     <span className="switch-label">
                       <i className="fas fa-image" style={{ marginRight: "0.5rem" }}></i>
-                      ¿Quieres incluir una imagen en el anuncio?
+                      Want to include an image in the ad?
                     </span>
                     <button
                       type="button"
                       className={`switch ${wantsAdPicture ? 'active' : ''}`}
                       onClick={() => setWantsAdPicture(!wantsAdPicture)}
-                      aria-label="Toggle ad picture"
+                      aria-label="Alternar imagen del anuncio"
                     />
                   </div>
                   <div className="builder-field-hint">
-                    Las imágenes con anuncios tienen mejor rendimiento, pero son opcionales.
+                    Images often perform better with ads, but they are optional.
                   </div>
                 </div>
 
@@ -1481,7 +1500,7 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                   <div className="builder-field builder-field-full">
                     <label className="builder-label" htmlFor="adPicture">
                       <i className="fas fa-image" style={{ marginRight: "0.5rem" }}></i>
-                      URL de la Imagen
+                      Image URL
                     </label>
                     <div className="builder-input-wrapper">
                       <input
@@ -1501,12 +1520,12 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                       </span>
                     </div>
                     <div className="builder-field-hint">
-                      Formatos recomendados: JPG, PNG. Dimensiones: 1200x628px.
+                      Recommended formats: JPG, PNG. Dimensions: 1200x628px.
                     </div>
                   </div>
                 )}
 
-                {/* Validación de Anuncio */}
+                {/* Ad validation */}
                 {(adValidationLoading || adValidationError || adValidationPassed) && (
                   <div className="builder-field builder-field-full">
                     <div className="builder-estimation-card" style={{
@@ -1527,43 +1546,43 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                         {adValidationLoading && (
                           <>
                             <i className="fas fa-spinner fa-spin" style={{ marginRight: "0.5rem" }}></i>
-                            Validando anuncio con IA...
+                            Validating ad with AI...
                           </>
                         )}
                         {adValidationPassed && (
                           <>
                             <i className="fas fa-check-circle" style={{ marginRight: "0.5rem" }}></i>
-                            Anuncio aprobado
+                            Ad approved
                           </>
                         )}
                         {adValidationError && (
                           <>
                             <i className="fas fa-exclamation-triangle" style={{ marginRight: "0.5rem" }}></i>
-                            Validación requerida
+                            Validation required
                           </>
                         )}
                       </div>
 
                       {adValidationLoading && (
-                        <div className="builder-estimation-loading">
+                          <div className="builder-estimation-loading">
                           <div className="builder-spinner"></div>
-                          Analizando si el anuncio es apropiado y cumple con las políticas...
+                          Analyzing whether the ad is appropriate and policy compliant...
                         </div>
                       )}
 
                       {adValidationPassed && (
                         <p style={{ fontSize: "0.9rem", color: "#16a34a", marginBottom: "0" }}>
-                          ✅ Tu anuncio ha sido validado y está listo para publicarse.
+                          ✅ Great! Your ad has been validated and is ready to publish.
                         </p>
                       )}
 
                       {adValidationError && (
                         <div style={{ fontSize: "0.9rem", color: "#dc2626", marginBottom: "0" }}>
                           <p style={{ marginBottom: "0.5rem" }}>
-                            ❌ {adValidationError}
+                            ✖ {adValidationError}
                           </p>
                           <p style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "0.5rem" }}>
-                            Por favor, modifica el contenido del anuncio para asegurar que sea apropiado.
+                            Please update the ad content to ensure it remains appropriate.
                           </p>
                         </div>
                       )}
@@ -1573,63 +1592,63 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
               </div>
             )}
 
-            {/* Step 4: Finalización */}
+            {/* Step 4: Completion */}
             {step === 4 && (
               <div className="builder-form-grid">
                 <div className="builder-section-title">
                   <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
-                  ¡Todo Listo!
+                  All set!
                 </div>
                 <p className="builder-field-hint">
-                  Tu landing page y campaña de anuncios están listas. Revisa la información y confirma para crear tu proyecto.
+                  Your landing page and ad campaign are ready. Review the details and confirm to create your project.
                 </p>
 
                 <div className="builder-field builder-field-full">
                   <div className="builder-estimation-card">
                     <div className="builder-estimation-title">
                       <i className="fas fa-check-circle" style={{ marginRight: "0.5rem" }}></i>
-                      Resumen del Proyecto
+                      Project summary
                     </div>
 
                     <div style={{ marginBottom: "1rem" }}>
                       <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                        Tipo: Combo Landing + Anuncios
+                        Tipo: Landing + Anuncios
                       </h4>
                       <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Precio: €49 <span style={{ textDecoration: "line-through", color: "#9ca3af" }}>€59</span>
+                        Price: €49 <span style={{ textDecoration: "line-through", color: "#9ca3af" }}>€59</span>
                       </p>
                     </div>
 
                     <div style={{ marginBottom: "1rem" }}>
                       <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                        Proyecto: {projectName}
+                        Project: {projectName}
                       </h4>
                       <p style={{ fontSize: "0.85rem", color: "#374151", lineHeight: "1.4" }}>
-                        {landingDescription.substring(0, 150)}...
+                        {landingDescription}
+                      </p>
+                      <p style={{ fontSize: "0.9rem", color: "#1e293b", marginTop: "0.5rem" }}>
+                        <strong>Headline:</strong> {adHeadline}
                       </p>
                     </div>
 
                     <div style={{ marginBottom: "1rem" }}>
                       <h4 style={{ fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1e293b" }}>
-                        Campaña de Anuncios
+                        Ad campaign
                       </h4>
                       <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Presupuesto: €{dailyBudget}/día × {campaignDuration} días = €{(dailyBudget * campaignDuration).toFixed(2)}
-                      </p>
-                      <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Título: {adHeadline}
+                        Budget: €{dailyBudget}/day × {campaignDuration} days = €{(dailyBudget * campaignDuration).toFixed(2)}
                       </p>
                     </div>
 
                     <div style={{ fontSize: "0.85rem", color: "#059669", marginTop: "1rem" }}>
-                      ✅ Contenido validado y seguro
+                      ✓ Content validado y seguro
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Botones de Navegación */}
+            {/* Navigation buttons */}
             <div className="builder-footer">
 
               <div className="builder-footer-actions">
@@ -1641,7 +1660,7 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                     disabled={submitting}
                   >
                     <i className="fas fa-arrow-left" style={{ marginRight: "0.5rem" }}></i>
-                    Volver al Dashboard
+                    Back to dashboard
                   </button>
                 )}
                 
@@ -1653,7 +1672,7 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                     disabled={submitting}
                   >
                     <i className="fas fa-arrow-left" style={{ marginRight: "0.5rem" }}></i>
-                    Anterior
+                    Back
                   </button>
                 )}
 
@@ -1664,7 +1683,7 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                     onClick={handleNext}
                     disabled={submitting}
                   >
-                    Siguiente
+                    Next
                     <i className="fas fa-arrow-right" style={{ marginLeft: "0.5rem" }}></i>
                   </button>
                 ) : (
@@ -1673,15 +1692,15 @@ Ej: Descubre cómo validar tu startup antes de invertir tiempo y dinero. Crea tu
                     className="builder-button builder-button-primary"
                     disabled={submitting}
                   >
-                    {submitting ? (
+                        {submitting ? (
                       <>
                         <div className="builder-spinner" style={{ width: "16px", height: "16px", marginRight: "0.5rem" }}></div>
-                        Creando Proyecto...
+                        Creating project...
                       </>
                     ) : (
                       <>
                         <i className="fas fa-rocket" style={{ marginRight: "0.5rem" }}></i>
-                        Crear Proyecto
+                        Create project
                       </>
                     )}
                   </button>
