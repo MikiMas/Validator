@@ -543,7 +543,7 @@ function Dashboard() {
                             )}
                             <div className="experiment-status">
                               <span className={`status-badge ${exp.ad_id ? 'status-active' : 'status-inactive'}`}>
-                                {exp.ad_id ? 'Active' : 'Landing page only'}
+                                {exp.ad_id ? 'Active' : 'Building ads...'}
                               </span>
                             </div>
                             <button
