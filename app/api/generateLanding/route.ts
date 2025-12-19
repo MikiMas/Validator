@@ -57,6 +57,7 @@ export async function POST(req: Request) {
 
 
     const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+    const origin = new URL(req.url).origin;
 
 
 
@@ -240,7 +241,7 @@ export async function POST(req: Request) {
 
         const adRes = await fetch(
 
-          `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/createMetaAd`,
+          `${origin}/api/createMetaAd`,
 
           {
 
@@ -256,7 +257,7 @@ export async function POST(req: Request) {
 
             body: JSON.stringify({
 
-              url: `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/${slug}`,
+              url: `${origin}/${slug}`,
 
               projectName: ideaName,
 
