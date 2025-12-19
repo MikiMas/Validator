@@ -2,6 +2,8 @@ import axios from "axios";
 import { getUserFromRequest } from "@/lib/authServer";
 import { sendRollbackEmail } from "@/lib/mailer";
 
+export const runtime = "nodejs";
+
 function json(status, data) {
   return new Response(JSON.stringify(data), {
     status,
@@ -244,4 +246,3 @@ export async function POST(req) {
     });
   }
 }
-
