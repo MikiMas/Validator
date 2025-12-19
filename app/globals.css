@@ -2526,6 +2526,30 @@ footer {
   animation: loading 1.5s infinite;
 }
 
+.app-loader {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  background: #0f172a;
+}
+
+.app-loader__title {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.app-loader__logo {
+  width: 96px;
+  height: auto;
+  border-radius: 16px;
+}
+
 @keyframes loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

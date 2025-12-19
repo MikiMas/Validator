@@ -15,7 +15,6 @@ function LandingPublica() {
             <img src="/images/logoBuff.png" alt="Buff Launch" className="lp-logo-image" />
             <div className="lp-logo-text">
               <strong>Buff Launch</strong>
-              <small>Real tests for bold products</small>
             </div>
           </a>
           <div className="lp-nav-actions">
@@ -440,7 +439,6 @@ function Dashboard() {
             <img src="/images/logoBuff.png" alt="Buff Launch" className="dash-sidebar-logo-image" />
             <div className="dash-sidebar-logo-meta">
               <p className="dash-sidebar-logo-title">Buff Launch</p>
-              <span className="dash-sidebar-logo-tagline">Validation dashboard</span>
             </div>
           </div>
           <div className="dash-sidebar-divider" aria-hidden="true" />
@@ -740,15 +738,16 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <p>Loading...</p>
+      <main className="app-loader" aria-busy="true" aria-live="polite">
+        <div className="app-loader__title">Buff Launch</div>
+        <img src="/images/logoBuff.png" alt="Buff Launch" className="app-loader__logo" />
       </main>
     );
   }
 
   if (!user) {
     return <LandingPublica />;
-  }
+}
 
   return <Dashboard />;
 }
