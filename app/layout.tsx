@@ -5,6 +5,10 @@ import { GenerationProvider } from "./contexts/generation/GenerationContext";
 export const metadata = {
   title: "Buff Launch",
   description: "Valida tu idea en minutos",
+  icons: {
+    icon: "/images/logo_buff_redondo.png",
+    apple: "/images/logo_buff_redondo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
