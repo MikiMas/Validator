@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
       adMessage,
 
-      adPicture
+      country
 
     } = await req.json();
 
@@ -202,15 +202,13 @@ export async function POST(req: Request) {
 
 
 
-    if (adHeadline || adMessage || adPicture) {
+    if (adHeadline || adMessage) {
 
       ideaRecord.ad_creative = {
 
         headline: adHeadline,
 
-        message: adMessage,
-
-        picture: adPicture
+        message: adMessage
 
       };
 
@@ -262,15 +260,14 @@ export async function POST(req: Request) {
 
               projectName: ideaName,
 
-              picture: adPicture,
-
               message: adMessage,
 
               adName: `Ad - ${ideaName}`,
 
               callToActionType: "SIGN_UP",
 
-              campaignSettings: campaignSettings
+              campaignSettings: campaignSettings,
+              country: country
 
             })
 

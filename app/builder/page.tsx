@@ -40,8 +40,42 @@ function MultiStepBuilder() {
   const [campaignDuration, setCampaignDuration] = useState(7);
   const [adHeadline, setAdHeadline] = useState("");
   const [adMessage, setAdMessage] = useState("");
-  const [adPicture, setAdPicture] = useState("");
-  const [wantsAdPicture, setWantsAdPicture] = useState(false);
+  const [adCountry, setAdCountry] = useState("ES");
+
+  const europeanCountries: Array<{
+    code: string;
+    name: string;
+    flag: string;
+  }> = [
+    { code: "ES", name: "Spain", flag: "🇪🇸" },
+    { code: "FR", name: "France", flag: "🇫🇷" },
+    { code: "DE", name: "Germany", flag: "🇩🇪" },
+    { code: "IT", name: "Italy", flag: "🇮🇹" },
+    { code: "PT", name: "Portugal", flag: "🇵🇹" },
+    { code: "NL", name: "Netherlands", flag: "🇳🇱" },
+    { code: "BE", name: "Belgium", flag: "🇧🇪" },
+    { code: "IE", name: "Ireland", flag: "🇮🇪" },
+    { code: "SE", name: "Sweden", flag: "🇸🇪" },
+    { code: "DK", name: "Denmark", flag: "🇩🇰" },
+    { code: "FI", name: "Finland", flag: "🇫🇮" },
+    { code: "PL", name: "Poland", flag: "🇵🇱" },
+    { code: "AT", name: "Austria", flag: "🇦🇹" },
+    { code: "GR", name: "Greece", flag: "🇬🇷" },
+    { code: "CZ", name: "Czechia", flag: "🇨🇿" },
+  ];
+
+  const adLanguage =
+    adCountry === "ES"
+      ? "Spanish"
+      : adCountry === "FR"
+        ? "French"
+        : adCountry === "DE" || adCountry === "AT"
+          ? "German"
+          : adCountry === "IT"
+            ? "Italian"
+            : adCountry === "PT"
+              ? "Portuguese"
+              : "English";
 
   // Ad validation
   const [adValidationLoading, setAdValidationLoading] = useState(false);
@@ -208,7 +242,6 @@ function MultiStepBuilder() {
         body: JSON.stringify({
           adHeadline,
           adMessage,
-          adPicture: wantsAdPicture ? adPicture : null
         })
       });
 
@@ -319,7 +352,7 @@ function MultiStepBuilder() {
           },
           adHeadline,
           adMessage,
-          adPicture: wantsAdPicture ? adPicture : null
+          country: adCountry
         }),
       });
 
@@ -1372,8 +1405,34 @@ function MultiStepBuilder() {
                       <i className="fas fa-calendar-days" />
                     </span>
                   </div>
-                  <div className="builder-field-hint">
-                    Recommended duration: 7-14 days to test.
+                <div className="builder-field-hint">
+                  Recommended duration: 7-14 days to test.
+                </div>
+                </div>
+
+                <div className="builder-field">
+                  <label className="builder-label" htmlFor="adCountry">
+                    <i className="fas fa-flag" style={{ marginRight: "0.5rem" }}></i>
+                    Country *
+                  </label>
+                  <div className="builder-input-wrapper">
+                    <select
+                      id="adCountry"
+                      className="builder-input"
+                      value={adCountry}
+                      onChange={(e) => setAdCountry(e.target.value)}
+                      disabled={estimation.loading}
+                      required
+                    >
+                      {europeanCountries.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.flag} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="builder-input-icon">
+                      <i className="fas fa-flag" />
+                    </span>
                   </div>
                 </div>
 
@@ -1477,53 +1536,6 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                     Maximum 300 characters. Include a clear call to action.
                   </div>
                 </div>
-
-                <div className="builder-field builder-field-full">
-                  <div className="switch-container">
-                    <span className="switch-label">
-                      <i className="fas fa-image" style={{ marginRight: "0.5rem" }}></i>
-                      Want to include an image in the ad?
-                    </span>
-                    <button
-                      type="button"
-                      className={`switch ${wantsAdPicture ? 'active' : ''}`}
-                      onClick={() => setWantsAdPicture(!wantsAdPicture)}
-                      aria-label="Alternar imagen del anuncio"
-                    />
-                  </div>
-                  <div className="builder-field-hint">
-                    Images often perform better with ads, but they are optional.
-                  </div>
-                </div>
-
-                {wantsAdPicture && (
-                  <div className="builder-field builder-field-full">
-                    <label className="builder-label" htmlFor="adPicture">
-                      <i className="fas fa-image" style={{ marginRight: "0.5rem" }}></i>
-                      Image URL
-                    </label>
-                    <div className="builder-input-wrapper">
-                      <input
-                        id="adPicture"
-                        type="url"
-                        className="builder-input"
-                        placeholder="https://ejemplo.com/imagen.jpg"
-                        value={adPicture}
-                        onChange={(e) => {
-                          setAdPicture(e.target.value);
-                          setAdValidationPassed(false);
-                          setAdValidationError(null);
-                        }}
-                      />
-                      <span className="builder-input-icon">
-                        <i className="fas fa-image" />
-                      </span>
-                    </div>
-                    <div className="builder-field-hint">
-                      Recommended formats: JPG, PNG. Dimensions: 1200x628px.
-                    </div>
-                  </div>
-                )}
 
                 {/* Ad validation */}
                 {(adValidationLoading || adValidationError || adValidationPassed) && (

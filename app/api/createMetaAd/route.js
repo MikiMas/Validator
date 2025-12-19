@@ -21,12 +21,14 @@ export async function POST(req) {
   let campaignId;
   let adSetId;
   let creativeId;
+  let requestBody;
 
   try {
     authUser = await getUserFromRequest(req);
     if (!authUser) return json(401, { error: "No autorizado" });
 
     const body = await req.json();
+    requestBody = body;
 
     // Mapeo de países a códigos de idioma (Meta locales)
     const countryToLanguage = {
@@ -36,7 +38,7 @@ export async function POST(req) {
       DE: 7, // Alemán
       IT: 26, // Italiano
       PT: 36, // Portugués
-      default: 4,
+      default: 22,
     };
 
     const {
@@ -85,11 +87,12 @@ export async function POST(req) {
       });
     }
 
-    const rollbackCreated = async (reason) => {
+    const rollbackCreated = async (reason, originalError) => {
       const idsToDelete = [creativeId, adSetId, campaignId].filter(Boolean);
       if (idsToDelete.length === 0) return { rolledBack: false, deleted: [] };
 
       const deleted = [];
+      const rollbackDeleteErrors = [];
       await Promise.all(
         idsToDelete.map(async (id) => {
           try {
@@ -98,13 +101,16 @@ export async function POST(req) {
             });
             deleted.push(id);
           } catch (rollbackError) {
-            console.error("Rollback failed:", rollbackError.response?.data || rollbackError.message);
+            const details = rollbackError.response?.data || rollbackError.message;
+            rollbackDeleteErrors.push({ id, details });
+            console.error("Rollback failed:", details);
           }
         })
       );
 
       const metaUser = authUser?.email || authUser?.id || "unknown";
       const subject = `[BuffLaunch] Rollback createMetaAd (${projectName})`;
+      const fullError = originalError?.response?.data || originalError?.message || originalError;
       const text =
         `Rollback ejecutado por error en createMetaAd.\n\n` +
         `Usuario: ${metaUser}\n` +
@@ -112,12 +118,30 @@ export async function POST(req) {
         `URL: ${url}\n` +
         `País: ${normalizedCountry}\n` +
         `Motivo: ${reason}\n\n` +
+        `Request body (sin secretos):\n` +
+        `${JSON.stringify(
+          {
+            url,
+            projectName,
+            adName,
+            callToActionType,
+            country: normalizedCountry,
+            campaignSettings: { durationDays, dailyBudget, totalBudget },
+            hasMessage: Boolean(message),
+          },
+          null,
+          2
+        )}\n\n` +
+        `Respuesta/Detalle del error:\n` +
+        `${typeof fullError === "string" ? fullError : JSON.stringify(fullError, null, 2)}\n\n` +
         `IDs creados:\n` +
         `- campaignId: ${campaignId || "n/a"}\n` +
         `- adSetId: ${adSetId || "n/a"}\n` +
         `- creativeId: ${creativeId || "n/a"}\n\n` +
         `IDs borrados:\n` +
-        deleted.map((x) => `- ${x}`).join("\n");
+        (deleted.length ? deleted.map((x) => `- ${x}`).join("\n") : "- ninguno") +
+        `\n\nErrores borrando:\n` +
+        (rollbackDeleteErrors.length ? JSON.stringify(rollbackDeleteErrors, null, 2) : "ninguno");
 
       try {
         await sendRollbackEmail({ subject, text });
@@ -166,7 +190,8 @@ export async function POST(req) {
             publisher_platforms: ["facebook", "instagram"],
             device_platforms: ["mobile"],
             facebook_positions: ["feed"],
-            instagram_positions: ["feed", "story"],
+            // Meta no acepta "feed" en instagram_positions; usar "stream" (feed) + "story"
+            instagram_positions: ["stream", "story"],
           },
           status: "ACTIVE",
           end_time: endDate.toISOString(),
@@ -175,7 +200,7 @@ export async function POST(req) {
       );
       adSetId = adSet.data.id;
     } catch (adSetError) {
-      const rollbackInfo = await rollbackCreated("Fallo creando AdSet");
+      const rollbackInfo = await rollbackCreated("Fallo creando AdSet", adSetError);
       throw Object.assign(adSetError, { rollbackInfo });
     }
 
@@ -199,7 +224,7 @@ export async function POST(req) {
       );
       creativeId = creative.data.id;
     } catch (creativeError) {
-      const rollbackInfo = await rollbackCreated("Fallo creando Creative");
+      const rollbackInfo = await rollbackCreated("Fallo creando Creative", creativeError);
       throw Object.assign(creativeError, { rollbackInfo });
     }
 
@@ -217,7 +242,7 @@ export async function POST(req) {
         { params: { access_token: ACCESS_TOKEN } }
       );
     } catch (adError) {
-      const rollbackInfo = await rollbackCreated("Fallo creando Ad");
+      const rollbackInfo = await rollbackCreated("Fallo creando Ad", adError);
       throw Object.assign(adError, { rollbackInfo });
     }
 

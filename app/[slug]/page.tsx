@@ -46,6 +46,9 @@ function buildHtml(landing: any, slug: string) {
       formIcon: string;
       calloutBg: string;
       calloutBorder: string;
+      titleGradient: string;
+      patternOpacity: string;
+      badgeHoverBg: string;
     }
   > = {
     dark: {
@@ -72,7 +75,10 @@ function buildHtml(landing: any, slug: string) {
       floatingShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
       formIcon: "rgba(248, 250, 252, 0.9)",
       calloutBg: "rgba(255, 255, 255, 0.06)",
-      calloutBorder: "rgba(255, 255, 255, 0.15)"
+      calloutBorder: "rgba(255, 255, 255, 0.15)",
+      titleGradient: "linear-gradient(135deg, #f8fafc 0%, rgba(255, 255, 255, 0.8) 100%)",
+      patternOpacity: "1",
+      badgeHoverBg: "rgba(255, 255, 255, 0.08)"
     },
     light: {
       primary: "#0f172a",
@@ -98,7 +104,10 @@ function buildHtml(landing: any, slug: string) {
       floatingShadow: "0 20px 40px rgba(15, 23, 42, 0.15)",
       formIcon: "rgba(15, 23, 42, 0.7)",
       calloutBg: "rgba(15, 23, 42, 0.05)",
-      calloutBorder: "rgba(15, 23, 42, 0.1)"
+      calloutBorder: "rgba(15, 23, 42, 0.1)",
+      titleGradient: "linear-gradient(135deg, #0f172a 0%, #334155 100%)",
+      patternOpacity: "0.25",
+      badgeHoverBg: "rgba(15, 23, 42, 0.08)"
     }
   };
   const palette = palettes[themeMode] || palettes.dark;
@@ -128,6 +137,9 @@ function buildHtml(landing: any, slug: string) {
             --input-icon-color: ${palette.formIcon};
             --callout-bg: ${palette.calloutBg};
             --callout-border: ${palette.calloutBorder};
+            --title-gradient: ${palette.titleGradient};
+            --pattern-opacity: ${palette.patternOpacity};
+            --badge-hover-bg: ${palette.badgeHoverBg};
         }
     `;
   const year = new Date().getFullYear();
@@ -166,6 +178,7 @@ ${colorVars}
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
             pointer-events: none;
             z-index: 1;
+            opacity: var(--pattern-opacity);
         }
 
         .hero-section {
@@ -191,9 +204,9 @@ ${colorVars}
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border);
             border-radius: 9999px;
             font-size: 0.875rem;
             color: var(--text-secondary);
@@ -202,7 +215,7 @@ ${colorVars}
         }
 
         .hero-badge:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--badge-hover-bg);
             transform: translateY(-2px);
         }
 
@@ -211,7 +224,7 @@ ${colorVars}
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 2rem;
-            background: linear-gradient(135deg, #f8fafc 0%, rgba(255, 255, 255, 0.8) 100%);
+            background: var(--title-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -238,7 +251,7 @@ ${colorVars}
             padding: 3rem;
             border-radius: 28px;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border);
             position: relative;
             overflow: hidden;
             margin: 0 auto;
@@ -443,9 +456,9 @@ ${colorVars}
             text-align: center;
             color: var(--text-light);
             font-size: 0.9rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-secondary);
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border);
             position: relative;
             z-index: 2;
         }
