@@ -279,9 +279,10 @@ export async function POST(req: Request) {
 
 
 
+        const adRawText = await adRes.text().catch(() => "");
         let adJson: any = null;
         try {
-          adJson = await adRes.json();
+          adJson = adRawText ? JSON.parse(adRawText) : null;
         } catch {
           adJson = null;
         }
@@ -291,7 +292,8 @@ export async function POST(req: Request) {
           ok: adRes.ok,
           status: adRes.status,
           statusText: adRes.statusText,
-          response: adJson
+          response: adJson,
+          responseText: adJson ? undefined : adRawText
         };
 
         if (adRes.ok) {
