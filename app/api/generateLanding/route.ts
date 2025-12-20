@@ -234,6 +234,7 @@ export async function POST(req: Request) {
     // If campaign data is provided, create the ad automatically
 
     let adData = null;
+    let adDebug: any = null;
 
     if (campaignSettings && adHeadline) {
 
@@ -278,9 +279,24 @@ export async function POST(req: Request) {
 
 
 
+        let adJson: any = null;
+        try {
+          adJson = await adRes.json();
+        } catch {
+          adJson = null;
+        }
+
+        adDebug = {
+          attempted: true,
+          ok: adRes.ok,
+          status: adRes.status,
+          statusText: adRes.statusText,
+          response: adJson
+        };
+
         if (adRes.ok) {
 
-          adData = await adRes.json();
+          adData = adJson;
 
 
 
@@ -292,7 +308,9 @@ export async function POST(req: Request) {
 
       } catch (adError) {
 
-        console.error("Error creating ad:", adError);
+        const msg = adError instanceof Error ? adError.message : String(adError);
+        adDebug = { attempted: true, ok: false, error: msg };
+        console.error("Error creating ad:", msg);
 
         // We don't fail the whole operation if the ad fails
 
@@ -308,7 +326,8 @@ export async function POST(req: Request) {
 
       slug,
 
-      adData
+      adData,
+      adDebug
 
     });
 
