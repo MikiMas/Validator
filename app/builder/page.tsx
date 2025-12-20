@@ -1537,6 +1537,41 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                   </div>
                 </div>
 
+                {/* Ad image preview (template-based) */}
+                <div className="builder-field builder-field-full">
+                  <div className="builder-ad-preview-card">
+                    <div className="builder-ad-preview-titlebar">
+                      <i className="fas fa-image" style={{ marginRight: "0.5rem" }}></i>
+                      Preview de la creatividad
+                    </div>
+                    <div className="builder-ad-preview-frame">
+                      <div className="builder-ad-preview-canvas">
+                        <div className="builder-ad-preview-headline">
+                          {adHeadline?.trim() ? adHeadline : "Tu titular aquí"}
+                        </div>
+                        <div className="builder-ad-preview-message">
+                          {adMessage?.trim()
+                            ? adMessage
+                            : "Tu descripción aquí. Mantén el mensaje claro y con una llamada a la acción."}
+                        </div>
+                        <div className="builder-ad-preview-brand">
+                          <img
+                            src="/images/logo_buff_redondo.png"
+                            alt="Logo"
+                            className="builder-ad-preview-brand-logo"
+                          />
+                          <span className="builder-ad-preview-brand-name">BuffLaunch</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="builder-ad-preview-actions">
+                    </div>
+                    <div className="builder-field-hint">
+                      Esta misma plantilla se usará como imagen del anuncio al publicarlo en Meta.
+                    </div>
+                  </div>
+                </div>
+
                 {/* Ad validation */}
                 {(adValidationLoading || adValidationError || adValidationPassed) && (
                   <div className="builder-field builder-field-full">

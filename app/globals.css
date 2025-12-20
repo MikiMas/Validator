@@ -1543,6 +1543,95 @@ footer {
   color: white;
 }
 
+/* Ad preview (template mock) */
+.builder-ad-preview-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.builder-ad-preview-titlebar {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.builder-ad-preview-frame {
+  width: 100%;
+  max-width: 520px;
+}
+
+.builder-ad-preview-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background:
+    radial-gradient(1200px 600px at 0% 0%, rgba(99, 102, 241, 0.35), rgba(99, 102, 241, 0) 55%),
+    radial-gradient(900px 520px at 100% 20%, rgba(124, 58, 237, 0.30), rgba(124, 58, 237, 0) 55%),
+    linear-gradient(135deg, #0b1220 0%, #111827 45%, #0b1220 100%);
+  padding: 38px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.builder-ad-preview-headline {
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-size: clamp(22px, 3.2vw, 44px);
+  text-wrap: balance;
+  max-width: 20ch;
+}
+
+.builder-ad-preview-message {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+  line-height: 1.35;
+  font-size: clamp(13px, 1.6vw, 18px);
+  max-width: 44ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.builder-ad-preview-brand {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.builder-ad-preview-brand-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.builder-ad-preview-brand-name {
+  opacity: 0.92;
+}
+
+.builder-ad-preview-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* Step indicators */
 .builder-steps {
   display: flex;

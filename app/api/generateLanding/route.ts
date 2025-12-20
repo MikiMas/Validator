@@ -262,6 +262,7 @@ export async function POST(req: Request) {
 
               projectName: ideaName,
 
+              headline: adHeadline,
               message: adMessage,
 
               adName: `Ad - ${ideaName}`,

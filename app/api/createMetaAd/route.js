@@ -16,6 +16,49 @@ function parseNumber(value) {
   return Number.isFinite(num) ? num : NaN;
 }
 
+function getRequestOrigin(req) {
+  const proto = req.headers.get("x-forwarded-proto") || "http";
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  if (host) return `${proto}://${host}`;
+  try {
+    return new URL(req.url).origin;
+  } catch {
+    return "";
+  }
+}
+
+async function uploadAdImageToMeta({
+  accessToken,
+  adAccountId,
+  pngArrayBuffer,
+  filename = "ad.png",
+}) {
+  const url = `https://graph.facebook.com/v19.0/act_${adAccountId}/adimages`;
+
+  const form = new FormData();
+  form.append("access_token", accessToken);
+  form.append("bytes", new Blob([pngArrayBuffer], { type: "image/png" }), filename);
+
+  const res = await fetch(url, { method: "POST", body: form });
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const err = new Error("Meta image upload failed");
+    err.meta = data;
+    throw err;
+  }
+
+  const imageInfo = data?.images?.[filename] || Object.values(data?.images || {})?.[0];
+  const hash = imageInfo?.hash;
+  if (!hash) {
+    const err = new Error("Meta image upload response missing hash");
+    err.meta = data;
+    throw err;
+  }
+
+  return { hash, raw: data };
+}
+
 export async function POST(req) {
   let authUser;
   let campaignId;
@@ -44,6 +87,7 @@ export async function POST(req) {
     const {
       url,
       projectName,
+      headline,
       message,
       callToActionType = "LEARN_MORE",
       adName,
@@ -62,6 +106,7 @@ export async function POST(req) {
       }
     }
     if (!projectName || typeof projectName !== "string") validationErrors.projectName = "projectName es obligatorio";
+    if (headline && typeof headline !== "string") validationErrors.headline = "headline debe ser string";
 
     const durationDays = parseNumber(campaignSettings?.durationDays);
     const dailyBudget = parseNumber(campaignSettings?.dailyBudget);
@@ -78,8 +123,18 @@ export async function POST(req) {
     const ACCESS_TOKEN = process.env.META_TOKEN;
     const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT;
     const PAGE_ID = process.env.META_PAGE_ID;
-    const CREATIVE_PICTURE_URL =
+
+    const origin = getRequestOrigin(req);
+    const brand = process.env.META_CREATIVE_BRAND || "BuffLaunch";
+    const fallbackPictureUrl =
       process.env.META_CREATIVE_PICTURE_URL || "https://www.bufflaunch.com/images/logoBuff.png";
+
+    const creativeImageUrl =
+      origin && (headline || message)
+        ? `${origin}/api/ad-image?headline=${encodeURIComponent(headline || projectName)}&message=${encodeURIComponent(
+            message || `Descubre ${projectName}`
+          )}&brand=${encodeURIComponent(brand)}`
+        : null;
 
     if (!ACCESS_TOKEN || !AD_ACCOUNT_ID || !PAGE_ID) {
       return json(500, {
@@ -206,6 +261,22 @@ export async function POST(req) {
 
     // 3) Creative
     try {
+      let imageHash = null;
+      if (creativeImageUrl) {
+        const imageRes = await fetch(creativeImageUrl, { cache: "no-store" });
+        if (!imageRes.ok) {
+          throw new Error(`No se pudo generar la imagen del anuncio (${imageRes.status})`);
+        }
+        const pngArrayBuffer = await imageRes.arrayBuffer();
+        const uploaded = await uploadAdImageToMeta({
+          accessToken: ACCESS_TOKEN,
+          adAccountId: AD_ACCOUNT_ID,
+          pngArrayBuffer,
+          filename: "ad.png",
+        });
+        imageHash = uploaded.hash;
+      }
+
       const creative = await axios.post(
         `https://graph.facebook.com/v19.0/act_${AD_ACCOUNT_ID}/adcreatives`,
         {
@@ -215,7 +286,7 @@ export async function POST(req) {
             link_data: {
               link: url,
               message: message || `Descubre ${projectName}`,
-              picture: CREATIVE_PICTURE_URL,
+              ...(imageHash ? { image_hash: imageHash } : { picture: fallbackPictureUrl }),
               call_to_action: { type: callToActionType },
             },
           },
