@@ -54,35 +54,6 @@ function LandingPublica() {
                 Learn more
               </a>
             </div>
-
-            <div className="lp-hero-card">
-              <div className="lp-hero-card-header">
-                <span>Dashboard preview</span>
-              </div>
-              <div className="lp-hero-card-body lp-hero-card-body-single">
-                <div>
-                  <p className="lp-metric-label">Example metrics</p>
-                  <p className="lp-metric-value">Views, leads, and conversions all in one place.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="lp-section" id="info">
-          <div className="lp-container">
-            <div className="lp-section-header">
-              <h2 className="lp-section-title">Designed to validate, not complicate.</h2>
-              <p className="lp-section-text">
-                One place to generate your landing page, launch basic campaigns, and see if an idea deserves the next step.
-              </p>
-            </div>
-
-            <ul className="lp-info-list">
-              <li>Describe your idea and goal in a few words.</li>
-              <li>Generate a landing page and consistent campaigns in minutes.</li>
-              <li>Review clear results and decide the next move.</li>
-            </ul>
           </div>
         </section>
       </main>
