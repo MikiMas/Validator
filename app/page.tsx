@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ function LandingPublica() {
                 investing months into development.
               </h1>
               <p className="lp-subheadline">
-                Build landing pages and campaigns ready to launch in minutes, and make decisions with real data—not guesses.
+                Build landing pages and campaigns ready to launch in minutes, and make decisions with real dataâ€”not guesses.
               </p>
             </div>
 
@@ -67,6 +67,11 @@ function Dashboard() {
   const { status, lastLandingSlug, lastAdId } = useGeneration();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [loadingExperiments, setLoadingExperiments] = useState(true);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackIdeaId, setFeedbackIdeaId] = useState<string>("");
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [feedbackResult, setFeedbackResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [metrics, setMetrics] = useState({
     totalViews: 0,
     totalClicks: 0,
@@ -90,6 +95,55 @@ function Dashboard() {
     experiment: null
   });
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+
+  const submitFeedback = async () => {
+    if (feedbackSubmitting) return;
+    setFeedbackResult(null);
+
+    const message = feedbackMessage.trim();
+    if (!message) {
+      setFeedbackResult({ ok: false, message: "Please write your feedback first." });
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({
+          message,
+          ideaId: feedbackIdeaId || null,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || `Request failed (${res.status})`);
+      }
+
+      setFeedbackMessage("");
+      setFeedbackIdeaId("");
+      setFeedbackResult({ ok: true, message: "Thanks! Your feedback has been sent." });
+    } catch (err: any) {
+      setFeedbackResult({ ok: false, message: err?.message || "Failed to send feedback." });
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
+
+  const openFeedbackModal = () => {
+    setFeedbackResult(null);
+    setFeedbackModalOpen(true);
+  };
+
+  const closeFeedbackModal = () => {
+    if (feedbackSubmitting) return;
+    setFeedbackModalOpen(false);
+  };
 
   useEffect(() => {
     async function fetchExperiments() {
@@ -455,6 +509,20 @@ function Dashboard() {
                   Launch new experiments and validate your ideas with real data
                 </p>
               </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
+                  <button
+                    type="button"
+                    className="builder-button builder-button-primary"
+                    onClick={openFeedbackModal}
+                    disabled={feedbackSubmitting}
+                    style={{ width: "auto" }}
+                  >
+                    Leave feedback
+                  </button>
+                  <p className="dash-subtitle" style={{ margin: 0, textAlign: "right", maxWidth: "360px" }}>
+                    Share your opinion to help us improve.
+                  </p>
+                </div>
             </div>
             {getStatusDisplay()}
           </header>
@@ -588,11 +656,119 @@ function Dashboard() {
                 )}
               </div>
             </section>
+
+
+                        
           </div>
         </main>
       </div>
 
-      {deleteModal.isOpen && (
+      
+      {feedbackModalOpen && (
+        <div className="delete-modal-overlay" onClick={closeFeedbackModal}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <h3 className="delete-modal-title">
+                <i className="fas fa-comment-dots" style={{ marginRight: "0.35rem", color: "#0ea5e9" }}></i>
+                Feedback
+              </h3>
+              <p className="delete-modal-description">
+                Tell us what works, what’s confusing, or what you’d like to see next.
+              </p>
+            </div>
+
+            <div style={{ padding: "0 1.5rem 1.5rem" }}>
+              <div className="builder-field" style={{ marginBottom: "1rem" }}>
+                <label className="builder-label" htmlFor="feedbackIdeaModal">
+                  Related project (optional)
+                </label>
+                <div className="builder-input-wrapper">
+                  <select
+                    id="feedbackIdeaModal"
+                    className="builder-input"
+                    value={feedbackIdeaId}
+                    onChange={(e) => setFeedbackIdeaId(e.target.value)}
+                    disabled={loadingExperiments || feedbackSubmitting}
+                  >
+                    <option value="">No specific project</option>
+                    {experiments.map((exp) => (
+                      <option key={exp.id} value={exp.id}>
+                        {exp.idea_name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="builder-input-icon">
+                    <i className="fas fa-folder-open" />
+                  </span>
+                </div>
+              </div>
+
+              <div className="builder-field builder-field-full" style={{ marginBottom: "1rem" }}>
+                <label className="builder-label" htmlFor="feedbackMessageModal">
+                  Your feedback *
+                </label>
+                <div className="builder-input-wrapper">
+                  <textarea
+                    id="feedbackMessageModal"
+                    className="builder-textarea"
+                    rows={5}
+                    maxLength={4000}
+                    placeholder="Write your feedback here…"
+                    value={feedbackMessage}
+                    onChange={(e) => setFeedbackMessage(e.target.value)}
+                    disabled={feedbackSubmitting}
+                  />
+                  <span className="builder-input-icon">
+                    <i className="fas fa-pen" />
+                  </span>
+                </div>
+                <div className="builder-field-hint">{feedbackMessage.length}/4000</div>
+              </div>
+
+              {feedbackResult && (
+                <div
+                  className="builder-estimation-card"
+                  style={{
+                    marginBottom: "1rem",
+                    background: feedbackResult.ok
+                      ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
+                      : "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                    border: feedbackResult.ok ? "1px solid #bbf7d0" : "1px solid #fecaca",
+                    color: feedbackResult.ok ? "#166534" : "#991b1b",
+                  }}
+                >
+                  {feedbackResult.message}
+                </div>
+              )}
+            </div>
+
+            <div className="delete-modal-actions">
+              <button
+                className="delete-modal-button delete-modal-button-secondary"
+                type="button"
+                onClick={closeFeedbackModal}
+                disabled={feedbackSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="delete-modal-button"
+                type="button"
+                onClick={submitFeedback}
+                disabled={feedbackSubmitting}
+                style={{
+                  background: "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  color: "white",
+                }}
+              >
+                {feedbackSubmitting ? "Sending..." : "Send feedback"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+{deleteModal.isOpen && (
         <div className="delete-modal-overlay" onClick={closeDeleteModal}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
             <div className="delete-modal-header">
@@ -722,3 +898,6 @@ export default function Home() {
 
   return <Dashboard />;
 }
+
+
+

@@ -49,6 +49,8 @@ function buildHtml(landing: any, slug: string) {
       titleGradient: string;
       patternOpacity: string;
       badgeHoverBg: string;
+      inputText: string;
+      inputPlaceholder: string;
     }
   > = {
     dark: {
@@ -78,7 +80,9 @@ function buildHtml(landing: any, slug: string) {
       calloutBorder: "rgba(255, 255, 255, 0.15)",
       titleGradient: "linear-gradient(135deg, #f8fafc 0%, rgba(255, 255, 255, 0.8) 100%)",
       patternOpacity: "1",
-      badgeHoverBg: "rgba(255, 255, 255, 0.08)"
+      badgeHoverBg: "rgba(255, 255, 255, 0.08)",
+      inputText: "#0f172a",
+      inputPlaceholder: "rgba(15, 23, 42, 0.55)"
     },
     light: {
       primary: "#0f172a",
@@ -107,7 +111,9 @@ function buildHtml(landing: any, slug: string) {
       calloutBorder: "rgba(15, 23, 42, 0.1)",
       titleGradient: "linear-gradient(135deg, #0f172a 0%, #334155 100%)",
       patternOpacity: "0.25",
-      badgeHoverBg: "rgba(15, 23, 42, 0.08)"
+      badgeHoverBg: "rgba(15, 23, 42, 0.08)",
+      inputText: "#0f172a",
+      inputPlaceholder: "rgba(15, 23, 42, 0.5)"
     }
   };
   const palette = palettes[themeMode] || palettes.dark;
@@ -140,6 +146,8 @@ function buildHtml(landing: any, slug: string) {
             --title-gradient: ${palette.titleGradient};
             --pattern-opacity: ${palette.patternOpacity};
             --badge-hover-bg: ${palette.badgeHoverBg};
+            --input-text: ${palette.inputText};
+            --input-placeholder: ${palette.inputPlaceholder};
         }
     `;
   const year = new Date().getFullYear();
@@ -360,12 +368,12 @@ ${colorVars}
             transition: all 0.25s ease;
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
-            color: var(--primary);
+            color: var(--input-text);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
         .form-input::placeholder {
-            color: var(--text-secondary);
+            color: var(--input-placeholder);
         }
 
         .form-input:focus {
