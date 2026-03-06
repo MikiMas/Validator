@@ -4,6 +4,15 @@ import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { getUserFromRequest } from "@/lib/authServer";
 
 const GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
+const AD_IMAGE_BUCKET = process.env.SUPABASE_AD_IMAGE_BUCKET || "files";
+
+const publicUrlToStoragePath = (publicUrl: string, bucket: string) => {
+  if (!publicUrl) return null;
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return null;
+  return publicUrl.slice(idx + marker.length);
+};
 
 const deleteMetaNode = async (nodeId: string, accessToken: string) => {
   try {
@@ -61,6 +70,27 @@ export async function POST(req: Request) {
     if (!idea || idea.user_id !== user.id) {
       console.error('Permission denied');
       return NextResponse.json({ success: false, error: "No tienes permiso para eliminar este experimento" }, { status: 403 });
+    }
+
+    // STEP 0: Delete campaign rows + creative image (if any) first
+    try {
+      const { data: campaigns } = await supabaseAdmin
+        .from("campaigns")
+        .select("id, creative_image_url")
+        .eq("idea_id", idea.id);
+
+      const pathsToDelete = (campaigns || [])
+        .map((c: any) => publicUrlToStoragePath(c?.creative_image_url, AD_IMAGE_BUCKET))
+        .filter((p: any): p is string => typeof p === "string" && p.length > 0);
+
+      if (pathsToDelete.length) {
+        await supabaseAdmin.storage.from(AD_IMAGE_BUCKET).remove(pathsToDelete);
+      }
+
+      await supabaseAdmin.from("campaigns").delete().eq("idea_id", idea.id);
+    } catch (cleanupError) {
+      console.error("Error cleaning up campaigns/storage:", cleanupError);
+      // Non-blocking; continue deleting the experiment.
     }
 
     // STEP 1: Delete from Supabase first (this is the most important)

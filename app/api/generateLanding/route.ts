@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { nanoid } from "nanoid";
 
 import { getUserFromRequest } from "@/lib/authServer";
+import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 
 
@@ -235,6 +236,8 @@ export async function POST(req: Request) {
 
     let adData = null;
     let adDebug: any = null;
+    const ideaId = insertedIdea?.[0]?.id;
+    const campaignRowId = nanoid(16);
 
     if (campaignSettings && adHeadline) {
 
@@ -261,6 +264,9 @@ export async function POST(req: Request) {
               url: `${origin}/${slug}`,
 
               projectName: ideaName,
+              ideaId,
+              slug,
+              campaignRowId,
 
               headline: adHeadline,
               message: adMessage,
@@ -306,6 +312,40 @@ export async function POST(req: Request) {
           // Actualizar la idea con el ID del anuncio
 
           await supabase.from("ideas").update({ ad_id: adData.adId }).eq("slug", slug);
+
+          // Persist campaign record (and creative_image_url) in `campaigns`
+          try {
+            const supabaseAdmin = getSupabaseAdminClient();
+            const now = new Date();
+            const end = new Date(now);
+            end.setDate(end.getDate() + (campaignSettings?.durationDays || 7));
+
+            if (ideaId) {
+              await supabaseAdmin.from("campaigns").insert({
+                id: campaignRowId,
+                idea_id: ideaId,
+                user_id: authUser.id,
+                name: `Campaign - ${ideaName}`,
+                objective: "OUTCOME_TRAFFIC",
+                status: "ACTIVE",
+                budget_type: "DAILY",
+                daily_budget: campaignSettings?.dailyBudget ?? null,
+                spend_cap: null,
+                start_time: now.toISOString(),
+                end_time: end.toISOString(),
+                campaign_id: adData.campaignId ?? null,
+                adset_id: adData.adSetId ?? null,
+                ad_id: adData.adId ?? null,
+                creative_name: `Creative - ${ideaName}`,
+                creative_message: adMessage ?? null,
+                creative_link: `${origin}/${slug}`,
+                creative_image_url: adData.creativeImageUrl ?? null,
+                ad_creative: ideaRecord.ad_creative ?? null,
+              });
+            }
+          } catch (persistError) {
+            console.error("Error inserting campaigns row:", persistError);
+          }
 
         }
 

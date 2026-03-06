@@ -95,6 +95,7 @@ function Dashboard() {
     experiment: null
   });
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+  const [buildingIdeaIds, setBuildingIdeaIds] = useState<Set<string>>(new Set());
 
   const submitFeedback = async () => {
     if (feedbackSubmitting) return;
@@ -158,14 +159,35 @@ function Dashboard() {
         if (error) {
           console.error("Error fetching experiments:", error);
         } else if (data) {
+          // Determine which experiments are still building (queued/running jobs)
+          let building = new Set<string>();
+          try {
+            const ideaIds = data.map((x: any) => x.id).filter(Boolean);
+            if (ideaIds.length) {
+              const { data: jobs } = await supabase
+                .from("experiment_jobs")
+                .select("idea_id,status")
+                .in("idea_id", ideaIds)
+                .in("status", ["queued", "running"]);
+
+              building = new Set<string>((jobs || []).map((j: any) => j.idea_id));
+            }
+          } catch (jobErr) {
+            console.error("Error fetching experiment jobs:", jobErr);
+          } finally {
+            setBuildingIdeaIds(building);
+          }
+
           // For each experiment, load metrics and waitlist separately
           const experimentsWithDetails = await Promise.all(
             data.map(async (experiment: any) => {
               console.log("Processing experiment:", experiment.id, experiment.idea_name);
               
-              // Load metrics if it has an ad_id
+              const isBuilding = building.has(experiment.id);
+
+              // Load metrics if it has an ad_id and it's not building
               let metrics: any = null;
-              if (experiment.ad_id) {
+              if (experiment.ad_id && !isBuilding) {
                 try {
                   console.log("Loading metrics for ad_id:", experiment.ad_id);
                   const res = await fetch(`/api/getAdMetrics?adId=${experiment.ad_id}`, {
@@ -579,8 +601,12 @@ function Dashboard() {
                               </a>
                             )}
                             <div className="experiment-status">
-                              <span className={`status-badge ${exp.ad_id ? 'status-active' : 'status-inactive'}`}>
-                                {exp.ad_id ? 'Active' : 'Building ads...'}
+                              <span
+                                className={`status-badge ${
+                                  buildingIdeaIds.has(exp.id) ? "status-inactive" : exp.ad_id ? "status-active" : "status-inactive"
+                                }`}
+                              >
+                                {buildingIdeaIds.has(exp.id) ? "Building..." : exp.ad_id ? "Active" : "Draft"}
                               </span>
                             </div>
                             <button

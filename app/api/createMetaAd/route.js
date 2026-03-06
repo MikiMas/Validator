@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getUserFromRequest } from "@/lib/authServer";
 import { sendRollbackEmail } from "@/lib/mailer";
+import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
@@ -27,36 +28,17 @@ function getRequestOrigin(req) {
   }
 }
 
-async function uploadAdImageToMeta({
-  accessToken,
-  adAccountId,
-  pngArrayBuffer,
-  filename = "ad.png",
-}) {
-  const url = `https://graph.facebook.com/v19.0/act_${adAccountId}/adimages`;
+async function uploadPngToSupabase({ bucket, path, arrayBuffer }) {
+  const supabaseAdmin = getSupabaseAdminClient();
+  const uploadRes = await supabaseAdmin.storage.from(bucket).upload(path, arrayBuffer, {
+    contentType: "image/png",
+    upsert: true,
+  });
+  if (uploadRes.error) throw uploadRes.error;
 
-  const form = new FormData();
-  form.append("access_token", accessToken);
-  form.append("bytes", new Blob([pngArrayBuffer], { type: "image/png" }), filename);
-
-  const res = await fetch(url, { method: "POST", body: form });
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    const err = new Error("Meta image upload failed");
-    err.meta = data;
-    throw err;
-  }
-
-  const imageInfo = data?.images?.[filename] || Object.values(data?.images || {})?.[0];
-  const hash = imageInfo?.hash;
-  if (!hash) {
-    const err = new Error("Meta image upload response missing hash");
-    err.meta = data;
-    throw err;
-  }
-
-  return { hash, raw: data };
+  const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
+  if (!data?.publicUrl) throw new Error("Could not get public URL for uploaded image");
+  return data.publicUrl;
 }
 
 export async function POST(req) {
@@ -89,6 +71,9 @@ export async function POST(req) {
       projectName,
       headline,
       message,
+      ideaId,
+      slug,
+      campaignRowId,
       callToActionType = "LEARN_MORE",
       adName,
       country = "ES",
@@ -107,6 +92,9 @@ export async function POST(req) {
     }
     if (!projectName || typeof projectName !== "string") validationErrors.projectName = "projectName es obligatorio";
     if (headline && typeof headline !== "string") validationErrors.headline = "headline debe ser string";
+    if (ideaId && typeof ideaId !== "string") validationErrors.ideaId = "ideaId debe ser string";
+    if (slug && typeof slug !== "string") validationErrors.slug = "slug debe ser string";
+    if (campaignRowId && typeof campaignRowId !== "string") validationErrors.campaignRowId = "campaignRowId debe ser string";
 
     const durationDays = parseNumber(campaignSettings?.durationDays);
     const dailyBudget = parseNumber(campaignSettings?.dailyBudget);
@@ -128,6 +116,7 @@ export async function POST(req) {
     const brand = process.env.META_CREATIVE_BRAND || "BuffLaunch";
     const fallbackPictureUrl =
       process.env.META_CREATIVE_PICTURE_URL || "https://www.bufflaunch.com/images/logoBuff.png";
+    const bucket = process.env.SUPABASE_AD_IMAGE_BUCKET || "files";
 
     const creativeImageUrl =
       origin && (headline || message)
@@ -261,20 +250,28 @@ export async function POST(req) {
 
     // 3) Creative
     try {
-      let imageHash = null;
+      let storedCreativeImageUrl = null;
+      let creativePictureUrl = fallbackPictureUrl;
+
       if (creativeImageUrl) {
+        if (!campaignRowId) {
+          throw new Error("campaignRowId es obligatorio para guardar la imagen en Storage");
+        }
         const imageRes = await fetch(creativeImageUrl, { cache: "no-store" });
         if (!imageRes.ok) {
           throw new Error(`No se pudo generar la imagen del anuncio (${imageRes.status})`);
         }
         const pngArrayBuffer = await imageRes.arrayBuffer();
-        const uploaded = await uploadAdImageToMeta({
-          accessToken: ACCESS_TOKEN,
-          adAccountId: AD_ACCOUNT_ID,
-          pngArrayBuffer,
-          filename: "ad.png",
+
+        const storagePath = `adImages/${campaignRowId}.png`;
+
+        storedCreativeImageUrl = await uploadPngToSupabase({
+          bucket,
+          path: storagePath,
+          arrayBuffer: pngArrayBuffer,
         });
-        imageHash = uploaded.hash;
+
+        creativePictureUrl = storedCreativeImageUrl;
       }
 
       const creative = await axios.post(
@@ -286,7 +283,7 @@ export async function POST(req) {
             link_data: {
               link: url,
               message: message || `Descubre ${projectName}`,
-              ...(imageHash ? { image_hash: imageHash } : { picture: fallbackPictureUrl }),
+              picture: creativePictureUrl,
               call_to_action: { type: callToActionType },
             },
           },
@@ -294,6 +291,9 @@ export async function POST(req) {
         { params: { access_token: ACCESS_TOKEN } }
       );
       creativeId = creative.data.id;
+
+      // Pass through for persistence by the caller (generateLanding)
+      requestBody = { ...requestBody, creative_image_url: storedCreativeImageUrl };
     } catch (creativeError) {
       const rollbackInfo = await rollbackCreated("Fallo creando Creative", creativeError);
       throw Object.assign(creativeError, { rollbackInfo });
@@ -323,6 +323,7 @@ export async function POST(req) {
       adSetId,
       creativeId,
       adId: ad.data.id,
+      creativeImageUrl: requestBody?.creative_image_url || null,
       status: "ACTIVE",
       message: "El anuncio está activo y en proceso de revisión por Meta.",
       campaignSettings: { durationDays, dailyBudget, totalBudget },

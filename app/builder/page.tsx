@@ -330,8 +330,8 @@ function MultiStepBuilder() {
     setLastAdId(null);
 
     try {
-      // Generate landing and campaign in a single endpoint
-      const response = await fetch("/api/generateLanding", {
+      // Create project record + enqueue background job (Vercel-safe)
+      const response = await fetch("/api/createProject", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -366,9 +366,8 @@ function MultiStepBuilder() {
 
       if (ideaSlug) {
         setLastLandingSlug(ideaSlug);
-        setLastAdId(data?.adData?.adId);
         setStatus("completed");
-        // Redirect after successful creation
+        // Redirect immediately; background worker will build the ad/campaign
         router.push("/");
       }
     } catch (error: any) {
