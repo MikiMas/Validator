@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { supabase } from "@/lib/supabaseClient";
+import { buildApiUrl } from "@/lib/apiClient";
 
-function buildHtml(landing: any, slug: string) {
+function buildHtml(landing: any, slug: string, waitlistApiUrl: string) {
   const escapeHtml = (value: unknown) =>
     String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -705,7 +706,7 @@ ${colorVars}
                 submitButton.disabled = true;
 
                 try {
-                    var res = await fetch('/api/waitlist', {
+                    var res = await fetch('${waitlistApiUrl}', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ slug: '${slug}', name, email }),
@@ -782,7 +783,10 @@ export default async function Landing({ params }: any) {
   return (
     <>
       <title>{ideaName || "Landing"}</title>
-      <div dangerouslySetInnerHTML={{ __html: buildHtml(landing, params.slug) }} />
+      <div dangerouslySetInnerHTML={{ __html: buildHtml(landing, params.slug, buildApiUrl("/api/bufflaunch/waitlist")) }} />
     </>
   );
 }
+
+
+

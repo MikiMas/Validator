@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/auth/AuthContext";
 import { useGeneration } from "../contexts/generation/GenerationContext";
+import { buildApiUrl } from "@/lib/apiClient";
 
 function MultiStepBuilder() {
   const router = useRouter();
@@ -47,21 +48,21 @@ function MultiStepBuilder() {
     name: string;
     flag: string;
   }> = [
-    { code: "ES", name: "Spain", flag: "🇪🇸" },
-    { code: "FR", name: "France", flag: "🇫🇷" },
-    { code: "DE", name: "Germany", flag: "🇩🇪" },
-    { code: "IT", name: "Italy", flag: "🇮🇹" },
-    { code: "PT", name: "Portugal", flag: "🇵🇹" },
-    { code: "NL", name: "Netherlands", flag: "🇳🇱" },
-    { code: "BE", name: "Belgium", flag: "🇧🇪" },
-    { code: "IE", name: "Ireland", flag: "🇮🇪" },
-    { code: "SE", name: "Sweden", flag: "🇸🇪" },
-    { code: "DK", name: "Denmark", flag: "🇩🇰" },
-    { code: "FI", name: "Finland", flag: "🇫🇮" },
-    { code: "PL", name: "Poland", flag: "🇵🇱" },
-    { code: "AT", name: "Austria", flag: "🇦🇹" },
-    { code: "GR", name: "Greece", flag: "🇬🇷" },
-    { code: "CZ", name: "Czechia", flag: "🇨🇿" },
+    { code: "ES", name: "Spain", flag: "????" },
+    { code: "FR", name: "France", flag: "????" },
+    { code: "DE", name: "Germany", flag: "????" },
+    { code: "IT", name: "Italy", flag: "????" },
+    { code: "PT", name: "Portugal", flag: "????" },
+    { code: "NL", name: "Netherlands", flag: "????" },
+    { code: "BE", name: "Belgium", flag: "????" },
+    { code: "IE", name: "Ireland", flag: "????" },
+    { code: "SE", name: "Sweden", flag: "????" },
+    { code: "DK", name: "Denmark", flag: "????" },
+    { code: "FI", name: "Finland", flag: "????" },
+    { code: "PL", name: "Poland", flag: "????" },
+    { code: "AT", name: "Austria", flag: "????" },
+    { code: "GR", name: "Greece", flag: "????" },
+    { code: "CZ", name: "Czechia", flag: "????" },
   ];
 
   const adLanguage =
@@ -103,7 +104,7 @@ function MultiStepBuilder() {
       setEstimation({
         loading: false,
         data: null,
-        error: "The minimum budget is €1"
+        error: "The minimum budget is �1"
       });
       return;
     }
@@ -111,7 +112,7 @@ function MultiStepBuilder() {
     setEstimation(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const response = await fetch('/api/estimateImpressions', {
+      const response = await fetch(buildApiUrl('/api/bufflaunch/estimateImpressions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +180,7 @@ function MultiStepBuilder() {
     setValidationSuggestion(null);
 
     try {
-      const response = await fetch('/api/validateContent', {
+      const response = await fetch(buildApiUrl('/api/bufflaunch/validateContent'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +234,7 @@ function MultiStepBuilder() {
     setAdValidationError(null);
 
     try {
-      const response = await fetch('/api/validateAdContent', {
+      const response = await fetch(buildApiUrl('/api/bufflaunch/validateAdContent'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -331,7 +332,7 @@ function MultiStepBuilder() {
 
     try {
       // Create project record + enqueue background job (Vercel-safe)
-      const response = await fetch("/api/createProject", {
+      const response = await fetch(buildApiUrl("/api/bufflaunch/createProject"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1188,7 +1189,7 @@ function MultiStepBuilder() {
                             marginTop: '1.5rem',
                             backdropFilter: 'blur(10px)'
                           }}>
-                            🎁 {landingOfferText}
+                            ?? {landingOfferText}
                           </div>
                         )}
                       </div>
@@ -1301,16 +1302,16 @@ function MultiStepBuilder() {
                       {validationPassed && (
                         <div>
                           <p style={{ fontSize: "0.9rem", color: "#16a34a", marginBottom: "0.5rem" }}>
-                            ✅ Your content is appropriate and meets our usage policies.
+                            ? Your content is appropriate and meets our usage policies.
                           </p>
                           {validationWarnings.length > 0 && (
                             <div style={{ marginTop: "1rem" }}>
                               <p style={{ fontSize: "0.85rem", color: "#f59e0b", marginBottom: "0.5rem" }}>
-                                ⚠ Recommendations:
+                                ? Recommendations:
                               </p>
                               {validationWarnings.map((warning, index) => (
                                 <p key={index} style={{ fontSize: "0.8rem", color: "#374151", marginBottom: "0.25rem" }}>
-                                  • {warning}
+                                  � {warning}
                                 </p>
                               ))}
                             </div>
@@ -1321,11 +1322,11 @@ function MultiStepBuilder() {
                       {validationError && (
                         <div style={{ fontSize: "0.9rem", color: "#dc2626" }}>
                           <p style={{ marginBottom: "0.5rem" }}>
-                            ✖ {validationError}
+                            ? {validationError}
                           </p>
                           {validationCategory && (
                             <p style={{ marginBottom: "0.25rem", fontSize: "0.8rem", color: "#b91c1c" }}>
-                              Categoría: {validationCategory}
+                              Categor�a: {validationCategory}
                             </p>
                           )}
                           {validationSuggestion && (
@@ -1357,7 +1358,7 @@ function MultiStepBuilder() {
                 <div className="builder-field">
                   <label className="builder-label" htmlFor="dailyBudget">
                     <i className="fas fa-euro-sign" style={{ marginRight: "0.5rem" }}></i>
-                    Daily Budget (€) *
+                    Daily Budget (�) *
                   </label>
                   <div className="builder-input-wrapper">
                     <input
@@ -1376,7 +1377,7 @@ function MultiStepBuilder() {
                     </span>
                   </div>
                   <div className="builder-field-hint">
-                    Minimum €1 per day. Recommended budget: €5-10 to start.
+                    Minimum �1 per day. Recommended budget: �5-10 to start.
                   </div>
                 </div>
 
@@ -1457,7 +1458,7 @@ function MultiStepBuilder() {
                           <div className="builder-estimation-label">CPC</div>
                         </div>
                         <div className="builder-estimation-item">
-                          <div className="builder-estimation-value">€{(dailyBudget * campaignDuration).toFixed(2)}</div>
+                          <div className="builder-estimation-value">�{(dailyBudget * campaignDuration).toFixed(2)}</div>
                           <div className="builder-estimation-label">Total investment</div>
                         </div>
                       </div>
@@ -1546,12 +1547,12 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                     <div className="builder-ad-preview-frame">
                       <div className="builder-ad-preview-canvas">
                         <div className="builder-ad-preview-headline">
-                          {adHeadline?.trim() ? adHeadline : "Tu titular aquí"}
+                          {adHeadline?.trim() ? adHeadline : "Tu titular aqu�"}
                         </div>
                         <div className="builder-ad-preview-message">
                           {adMessage?.trim()
                             ? adMessage
-                            : "Tu descripción aquí. Mantén el mensaje claro y con una llamada a la acción."}
+                            : "Tu descripci�n aqu�. Mant�n el mensaje claro y con una llamada a la acci�n."}
                         </div>
                         <div className="builder-ad-preview-brand">
                           <img
@@ -1566,7 +1567,7 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                     <div className="builder-ad-preview-actions">
                     </div>
                     <div className="builder-field-hint">
-                      Esta misma plantilla se usará como imagen del anuncio al publicarlo en Meta.
+                      Esta misma plantilla se usar� como imagen del anuncio al publicarlo en Meta.
                     </div>
                   </div>
                 </div>
@@ -1618,14 +1619,14 @@ e.g., Discover how to validate your venture before investing time and money. Cre
 
                       {adValidationPassed && (
                         <p style={{ fontSize: "0.9rem", color: "#16a34a", marginBottom: "0" }}>
-                          ✅ Great! Your ad has been validated and is ready to publish.
+                          ? Great! Your ad has been validated and is ready to publish.
                         </p>
                       )}
 
                       {adValidationError && (
                         <div style={{ fontSize: "0.9rem", color: "#dc2626", marginBottom: "0" }}>
                           <p style={{ marginBottom: "0.5rem" }}>
-                            ✖ {adValidationError}
+                            ? {adValidationError}
                           </p>
                           <p style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "0.5rem" }}>
                             Please update the ad content to ensure it remains appropriate.
@@ -1661,7 +1662,7 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                         Tipo: Landing + Anuncios
                       </h4>
                       <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Price: €49 <span style={{ textDecoration: "line-through", color: "#9ca3af" }}>€59</span>
+                        Price: �49 <span style={{ textDecoration: "line-through", color: "#9ca3af" }}>�59</span>
                       </p>
                     </div>
 
@@ -1682,12 +1683,12 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                         Ad campaign
                       </h4>
                       <p style={{ fontSize: "0.85rem", color: "#374151" }}>
-                        Budget: €{dailyBudget}/day × {campaignDuration} days = €{(dailyBudget * campaignDuration).toFixed(2)}
+                        Budget: �{dailyBudget}/day � {campaignDuration} days = �{(dailyBudget * campaignDuration).toFixed(2)}
                       </p>
                     </div>
 
                     <div style={{ fontSize: "0.85rem", color: "#059669", marginTop: "1rem" }}>
-                      ✓ Content validado y seguro
+                      ? Content validado y seguro
                     </div>
                   </div>
                 </div>
@@ -1761,3 +1762,5 @@ e.g., Discover how to validate your venture before investing time and money. Cre
 }
 
 export default MultiStepBuilder;
+
+

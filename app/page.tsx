@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./contexts/auth/AuthContext";
 import { useGeneration } from "./contexts/generation/GenerationContext";
 import { supabase } from "@/lib/supabaseClient";
+import { buildApiUrl } from "@/lib/apiClient";
 
 function LandingPublica() {
   return (
@@ -42,7 +43,7 @@ function LandingPublica() {
                 investing months into development.
               </h1>
               <p className="lp-subheadline">
-                Build landing pages and campaigns ready to launch in minutes, and make decisions with real dataâ€”not guesses.
+                Build landing pages and campaigns ready to launch in minutes, and make decisions with real data—not guesses.
               </p>
             </div>
 
@@ -109,7 +110,7 @@ function Dashboard() {
 
     setFeedbackSubmitting(true);
     try {
-      const res = await fetch("/api/feedback", {
+      const res = await fetch(buildApiUrl("/api/bufflaunch/feedback"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -190,7 +191,7 @@ function Dashboard() {
               if (experiment.ad_id && !isBuilding) {
                 try {
                   console.log("Loading metrics for ad_id:", experiment.ad_id);
-                  const res = await fetch(`/api/getAdMetrics?adId=${experiment.ad_id}`, {
+                  const res = await fetch(buildApiUrl(`/api/bufflaunch/getAdMetrics?adId=${experiment.ad_id}`), {
                     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
                   });
                   const metricsData = await res.json();
@@ -433,7 +434,7 @@ function Dashboard() {
     console.log('Sending delete request for experiment ID:', experiment.id);
 
     try {
-      const response = await fetch("/api/deleteExperiment", {
+      const response = await fetch(buildApiUrl("/api/bufflaunch/deleteExperiment"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -655,7 +656,7 @@ function Dashboard() {
                           <div className="experiment-metric">
                             <div className="experiment-metric-value">
                               <i className="fas fa-dollar-sign" style={{ color: "#f59e0b", marginRight: "0.5rem" }}></i>
-                              {exp.metrics?.spend || 0}€
+                              {exp.metrics?.spend || 0}�
                             </div>
                             <div className="experiment-metric-label">Spent</div>
                           </div>
@@ -699,7 +700,7 @@ function Dashboard() {
                 Feedback
               </h3>
               <p className="delete-modal-description">
-                Tell us what works, what’s confusing, or what you’d like to see next.
+                Tell us what works, what�s confusing, or what you�d like to see next.
               </p>
             </div>
 
@@ -739,7 +740,7 @@ function Dashboard() {
                     className="builder-textarea"
                     rows={5}
                     maxLength={4000}
-                    placeholder="Write your feedback here…"
+                    placeholder="Write your feedback here�"
                     value={feedbackMessage}
                     onChange={(e) => setFeedbackMessage(e.target.value)}
                     disabled={feedbackSubmitting}
@@ -924,6 +925,8 @@ export default function Home() {
 
   return <Dashboard />;
 }
+
+
 
 
 
