@@ -1,0 +1,53 @@
+name: Deploy BuffLaunch
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-bufflaunch
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: appleboy/ssh-action@v1.0.0
+        env:
+          BUFFLAUNCH_ENV: ${{ secrets.BUFFLAUNCH_ENV }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: BUFFLAUNCH_ENV
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            if [ ! -d /var/www/bufflaunch-live/.git ]; then
+              git clone https://github.com/MikiMas/Validator.git /var/www/bufflaunch-live
+            fi
+
+            cd /var/www/bufflaunch-live
+            git fetch --all --prune
+            git checkout main
+            git reset --hard origin/main
+
+            printf "%s" "$BUFFLAUNCH_ENV" > .env
+            chmod 600 .env
+
+            echo "DEPLOY_COMMIT=$(git rev-parse --short HEAD)"
+
+            npm ci
+            npm run build
+
+            pm2 delete validator || true
+            pm2 delete bufflaunch-front || true
+            pm2 start npm --name bufflaunch-front --cwd /var/www/bufflaunch-live -- start -- -p 3000
+            pm2 save
+            pm2 describe bufflaunch-front
+
+            sleep 2
+            curl --silent --show-error --fail http://127.0.0.1:3000 >/dev/null
