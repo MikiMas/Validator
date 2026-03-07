@@ -35,6 +35,11 @@ jobs:
             git checkout main
             git reset --hard origin/main
 
+            if [ -z "${BUFFLAUNCH_ENV:-}" ]; then
+              echo "BUFFLAUNCH_ENV is empty or missing"
+              exit 1
+            fi
+
             printf "%s" "$BUFFLAUNCH_ENV" > .env
             chmod 600 .env
 
