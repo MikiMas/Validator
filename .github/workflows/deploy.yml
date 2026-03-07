@@ -31,17 +31,29 @@ jobs:
             fi
 
             cd /var/www/bufflaunch-live
+
+            if [ -f .env ] && [ -s .env ] && [ ! -f .env.local ]; then
+              cp .env .env.local
+              chmod 600 .env.local
+            fi
+
             git fetch --all --prune
             git checkout main
             git reset --hard origin/main
 
-            if [ -z "${BUFFLAUNCH_ENV:-}" ]; then
-              echo "BUFFLAUNCH_ENV is empty or missing"
+            if [ -n "${BUFFLAUNCH_ENV:-}" ]; then
+              printf "%s" "$BUFFLAUNCH_ENV" > .env.local
+              chmod 600 .env.local
+            elif [ -f .env.local ] && [ -s .env.local ]; then
+              echo "Using existing .env.local on server"
+            elif [ -f .env ] && [ -s .env ]; then
+              cp .env .env.local
+              chmod 600 .env.local
+              echo "Migrated existing .env to .env.local"
+            else
+              echo "No frontend environment file available on server"
               exit 1
             fi
-
-            printf "%s" "$BUFFLAUNCH_ENV" > .env
-            chmod 600 .env
 
             echo "DEPLOY_COMMIT=$(git rev-parse --short HEAD)"
 
