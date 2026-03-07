@@ -28,13 +28,12 @@ function MultiStepBuilder() {
   const [projectName, setProjectName] = useState("");
   const [projectSlug, setProjectSlug] = useState("");
 
-  // AI validation state (only checks that content is appropriate)
-  const [validationLoading, setValidationLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [validationPassed, setValidationPassed] = useState(false);
-  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
-  const [validationCategory, setValidationCategory] = useState<string | null>(null);
-  const [validationSuggestion, setValidationSuggestion] = useState<string | null>(null);
+  const validationLoading = false;
+  const validationPassed = false;
+  const validationWarnings: string[] = [];
+  const validationCategory: string | null = null;
+  const validationSuggestion: string | null = null;
 
   // Step 2: Ad configuration
   const [dailyBudget, setDailyBudget] = useState(10);
@@ -78,10 +77,9 @@ function MultiStepBuilder() {
               ? "Portuguese"
               : "English";
 
-  // Ad validation
-  const [adValidationLoading, setAdValidationLoading] = useState(false);
   const [adValidationError, setAdValidationError] = useState<string | null>(null);
-  const [adValidationPassed, setAdValidationPassed] = useState(false);
+  const adValidationLoading = false;
+  const adValidationPassed = false;
 
   // Impressions estimation
   const [estimation, setEstimation] = useState<{
@@ -154,8 +152,7 @@ function MultiStepBuilder() {
     }
   }, [loading, router, user]);
 
-  // Function to validate landing content with AI (only checks for appropriateness)
-  const validateLandingContent = async () => {
+  const validateLandingInputs = () => {
     if (!projectName.trim()) {
       setValidationError("Please provide the project name");
       return false;
@@ -172,117 +169,32 @@ function MultiStepBuilder() {
       return false;
     }
 
-    setValidationLoading(true);
     setValidationError(null);
-    setValidationWarnings([]);
-    setValidationPassed(false);
-    setValidationCategory(null);
-    setValidationSuggestion(null);
-
-    try {
-      const response = await fetch(buildApiUrl('/api/bufflaunch/validateContent'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-        },
-        body: JSON.stringify({
-          title: landingTitle,
-          description: landingDescription,
-          waitlistText: landingWaitlistText,
-          offerText: hasLandingOffer ? landingOfferText : null
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Error validating the content");
-      }
-
-      if (data.valid) {
-        setValidationPassed(true);
-        if (data.warnings && data.warnings.length > 0) {
-          setValidationWarnings(data.warnings);
-        }
-        return true;
-      } else {
-        setValidationError(data.reason || "The content is not appropriate");
-        setValidationCategory(data.category || null);
-        setValidationSuggestion(data.suggestion || null);
-        return false;
-      }
-    } catch (error: any) {
-      console.error('Error validating content:', error);
-      setValidationError('Error validating the content. Please try again.');
-      setValidationCategory(null);
-      setValidationSuggestion(null);
-      return false;
-    } finally {
-      setValidationLoading(false);
-    }
+    return true;
   };
 
-  // AI-based ad content validation
-  const validateAdContent = async () => {
+  const validateAdInputs = () => {
     if (!adHeadline.trim() || !adMessage.trim()) {
       setAdValidationError("Please complete the ad headline and message");
       return false;
     }
 
-    setAdValidationLoading(true);
     setAdValidationError(null);
-
-    try {
-      const response = await fetch(buildApiUrl('/api/bufflaunch/validateAdContent'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
-        },
-        body: JSON.stringify({
-          adHeadline,
-          adMessage,
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Error validating the ad");
-      }
-
-      if (data.valid) {
-        setAdValidationPassed(true);
-        return true;
-      } else {
-        setAdValidationError(data.reason || "The ad content is not appropriate");
-        return false;
-      }
-    } catch (error: any) {
-      console.error('Error validating ad content:', error);
-      setAdValidationError('Error validating the ad. Please try again.');
-      return false;
-    } finally {
-      setAdValidationLoading(false);
-    }
+    return true;
   };
 
   // Step navigation
   const nextStep = async () => {
-    // Landing content validation (first step after the introduction)
     if (step === 1) {
-      const isValid = await validateLandingContent();
+      const isValid = validateLandingInputs();
       if (!isValid) return;
     }
 
-    // Ad validation
     if (step === 3) {
-      const isValid = await validateAdContent();
+      const isValid = validateAdInputs();
       if (!isValid) return;
     }
 
-    // Resetear validaciones al cambiar de paso
     setValidationError(null);
     setAdValidationError(null);
 
@@ -535,6 +447,7 @@ function MultiStepBuilder() {
                             value={landingTitle}
                             onChange={(e) => {
                       if (e.target.value.length <= 40) {
+                        setValidationError(null);
                         setLandingTitle(e.target.value);
                       }
                     }}
@@ -570,6 +483,7 @@ function MultiStepBuilder() {
                             value={landingDescription}
                             onChange={(e) => {
                       if (e.target.value.length <= 600) {
+                        setValidationError(null);
                         setLandingDescription(e.target.value);
                       }
                     }}
@@ -607,6 +521,7 @@ function MultiStepBuilder() {
                             value={landingWaitlistText}
                             onChange={(e) => {
                       if (e.target.value.length <= 60) {
+                        setValidationError(null);
                         setLandingWaitlistText(e.target.value);
                       }
                     }}
@@ -637,7 +552,10 @@ function MultiStepBuilder() {
                           <button
                             type="button"
                             className={`switch ${hasLandingOffer ? 'active' : ''}`}
-                            onClick={() => setHasLandingOffer(!hasLandingOffer)}
+                            onClick={() => {
+                              setValidationError(null);
+                              setHasLandingOffer(!hasLandingOffer);
+                            }}
                             aria-label="Toggle landing page offer"
                           />
                         </div>
@@ -659,6 +577,7 @@ function MultiStepBuilder() {
                               value={landingOfferText}
                               onChange={(e) => {
                       if (e.target.value.length <= 80) {
+                        setValidationError(null);
                         setLandingOfferText(e.target.value);
                       }
                     }}
@@ -701,7 +620,10 @@ function MultiStepBuilder() {
                               color: landingTheme === "dark" ? "white" : "#1e293b",
                               padding: "1.5rem"
                             }}
-                            onClick={() => setLandingTheme("dark")}
+                            onClick={() => {
+                              setValidationError(null);
+                              setLandingTheme("dark");
+                            }}
                           >
                             <div className="builder-estimation-title" style={{ 
                               color: landingTheme === "dark" ? "white" : "#1e293b",
@@ -753,7 +675,10 @@ function MultiStepBuilder() {
                               color: "#1e293b",
                               padding: "1.5rem"
                             }}
-                            onClick={() => setLandingTheme("light")}
+                            onClick={() => {
+                              setValidationError(null);
+                              setLandingTheme("light");
+                            }}
                           >
                             <div className="builder-estimation-title" style={{ 
                               color: "#1e293b",
@@ -1209,7 +1134,10 @@ function MultiStepBuilder() {
                             placeholder="Ej: MiApp Emprendimiento"
                             required
                             value={projectName}
-                            onChange={(e) => setProjectName(e.target.value)}
+                            onChange={(e) => {
+                              setValidationError(null);
+                              setProjectName(e.target.value);
+                            }}
                           />
                           <span className="builder-input-icon">
                             <i className="fas fa-lightbulb" />
@@ -1234,6 +1162,7 @@ function MultiStepBuilder() {
                             required
                             value={projectSlug}
                             onChange={(e) => {
+                              setValidationError(null);
                               const sanitized = e.target.value
                                 .toLowerCase()
                                 .replace(/[^a-z0-9-]/g, "")
@@ -1476,7 +1405,7 @@ function MultiStepBuilder() {
                   Crea tu Anuncio
                 </div>
                   <p className="builder-field-hint">
-                  Write your ad headline and message. AI will verify it is appropriate before publishing.
+                  Write your ad headline and message before publishing.
                 </p>
 
                 <div className="builder-field builder-field-full">
@@ -1493,9 +1422,8 @@ function MultiStepBuilder() {
                       maxLength={100}
                       value={adHeadline}
                       onChange={(e) => {
-                        setAdHeadline(e.target.value);
-                        setAdValidationPassed(false);
                         setAdValidationError(null);
+                        setAdHeadline(e.target.value);
                       }}
                     />
                     <span className="builder-input-icon">
@@ -1523,9 +1451,8 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                       rows={4}
                       value={adMessage}
                       onChange={(e) => {
-                        setAdMessage(e.target.value);
-                        setAdValidationPassed(false);
                         setAdValidationError(null);
+                        setAdMessage(e.target.value);
                       }}
                     />
                     <span className="builder-input-icon">
@@ -1688,7 +1615,7 @@ e.g., Discover how to validate your venture before investing time and money. Cre
                     </div>
 
                     <div style={{ fontSize: "0.85rem", color: "#059669", marginTop: "1rem" }}>
-                      ? Content validado y seguro
+                      Ready to publish
                     </div>
                   </div>
                 </div>

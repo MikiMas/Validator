@@ -7,6 +7,30 @@ import { useGeneration } from "./contexts/generation/GenerationContext";
 import { supabase } from "@/lib/supabaseClient";
 import { buildApiUrl } from "@/lib/apiClient";
 
+function buildTestProjectPayload() {
+  const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 12);
+  const ideaName = `Test project ${stamp}`;
+
+  return {
+    ideaName,
+    ideaDescription: "An example SaaS landing used to validate the full Buff Launch creation flow from the dashboard.",
+    waitlistOffer: "Join the waitlist for early access and a launch discount.",
+    landingTitle: "Validate your next product idea with real traffic",
+    landingDescription:
+      "Launch a simple landing page, spend a minimal budget, and learn whether real people are interested before you build.",
+    landingWaitlistText: "Join the waitlist",
+    landingTheme: "light" as const,
+    campaignSettings: {
+      durationDays: 1,
+      dailyBudget: 1,
+      totalBudget: 1,
+    },
+    adHeadline: "Test your idea before building it",
+    adMessage: "Create a landing page, spend 1 EUR, and see if your idea attracts real people.",
+    country: "ES",
+  };
+}
+
 function LandingPublica() {
   return (
     <div className="lp-wrapper">
@@ -65,7 +89,7 @@ function LandingPublica() {
 function Dashboard() {
   const router = useRouter();
   const { user, logout, accessToken } = useAuth();
-  const { status, lastLandingSlug, lastAdId } = useGeneration();
+  const { status, setStatus, setLastLandingSlug, setLastAdId } = useGeneration();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [loadingExperiments, setLoadingExperiments] = useState(true);
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -95,8 +119,20 @@ function Dashboard() {
     isOpen: false,
     experiment: null
   });
+  const [deleteResultModal, setDeleteResultModal] = useState<{
+    isOpen: boolean;
+    ok: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    ok: true,
+    title: "",
+    message: ""
+  });
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
   const [buildingIdeaIds, setBuildingIdeaIds] = useState<Set<string>>(new Set());
+  const [testProjectSubmitting, setTestProjectSubmitting] = useState(false);
 
   const submitFeedback = async () => {
     if (feedbackSubmitting) return;
@@ -424,11 +460,32 @@ function Dashboard() {
     });
   };
 
+  const openDeleteResultModal = (ok: boolean, message: string) => {
+    setDeleteResultModal({
+      isOpen: true,
+      ok,
+      title: ok ? "Experiment deleted" : "Could not delete the experiment",
+      message,
+    });
+  };
+
+  const closeDeleteResultModal = () => {
+    setDeleteResultModal({
+      isOpen: false,
+      ok: true,
+      title: "",
+      message: ""
+    });
+  };
+
   const handleDeleteExperiment = async (experiment: any) => {
     console.log('Delete experiment clicked:', experiment);
     if (!experiment?.id) {
       console.error('No experiment ID found');
-      return false;
+      return {
+        ok: false,
+        message: "Could not delete the experiment."
+      };
     }
     setDeleteLoadingId(experiment.id);
     console.log('Sending delete request for experiment ID:', experiment.id);
@@ -453,12 +510,16 @@ function Dashboard() {
       }
 
       setExperiments(prev => prev.filter(exp => exp.id !== experiment.id));
-      alert(result?.message || "Experiment deleted successfully.");
-      return true;
+      return {
+        ok: true,
+        message: result?.message || "Experiment deleted successfully."
+      };
     } catch (error: any) {
       console.error("Error deleting experiment:", error);
-      alert(error?.message || "Could not delete the experiment.");
-      return false;
+      return {
+        ok: false,
+        message: error?.message || "Could not delete the experiment."
+      };
     } finally {
       setDeleteLoadingId(null);
     }
@@ -471,9 +532,45 @@ function Dashboard() {
       return;
     }
 
-    const success = await handleDeleteExperiment(deleteModal.experiment);
-    if (success) {
-      closeDeleteModal();
+    const result = await handleDeleteExperiment(deleteModal.experiment);
+    closeDeleteModal();
+    openDeleteResultModal(result.ok, result.message);
+  };
+
+  const handleCreateTestProject = async () => {
+    if (testProjectSubmitting) return;
+
+    setTestProjectSubmitting(true);
+    setStatus("processing");
+    setLastLandingSlug(null);
+    setLastAdId(null);
+
+    const payload = buildTestProjectPayload();
+
+    try {
+      const response = await fetch(buildApiUrl("/api/bufflaunch/createProject"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Could not create the test project");
+      }
+
+      setLastLandingSlug(data?.slug ?? null);
+      setStatus("completed");
+    } catch (error: any) {
+      console.error("Error creating test project:", error);
+      setStatus("error");
+      alert(error?.message || "Could not create the test project.");
+    } finally {
+      setTestProjectSubmitting(false);
     }
   };
 
@@ -533,15 +630,26 @@ function Dashboard() {
                 </p>
               </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
-                  <button
-                    type="button"
-                    className="builder-button builder-button-primary"
-                    onClick={openFeedbackModal}
-                    disabled={feedbackSubmitting}
-                    style={{ width: "auto" }}
-                  >
-                    Leave feedback
-                  </button>
+                  <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="builder-button builder-button-secondary"
+                      onClick={handleCreateTestProject}
+                      disabled={feedbackSubmitting || testProjectSubmitting}
+                      style={{ width: "auto" }}
+                    >
+                      {testProjectSubmitting ? "Creating test..." : "Create test project"}
+                    </button>
+                    <button
+                      type="button"
+                      className="builder-button builder-button-primary"
+                      onClick={openFeedbackModal}
+                      disabled={feedbackSubmitting || testProjectSubmitting}
+                      style={{ width: "auto" }}
+                    >
+                      Leave feedback
+                    </button>
+                  </div>
                   <p className="dash-subtitle" style={{ margin: 0, textAlign: "right", maxWidth: "360px" }}>
                     Share your opinion to help us improve.
                   </p>
@@ -830,6 +938,40 @@ function Dashboard() {
                 disabled={deleteLoadingId === deleteModal.experiment?.id}
               >
                 {deleteLoadingId === deleteModal.experiment?.id ? "Deleting..." : "Confirm deletion"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteResultModal.isOpen && (
+        <div className="delete-modal-overlay" onClick={closeDeleteResultModal}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <h3 className="delete-modal-title">
+                <i
+                  className={`fas ${deleteResultModal.ok ? "fa-check-circle" : "fa-exclamation-triangle"}`}
+                  style={{ marginRight: "0.35rem", color: deleteResultModal.ok ? "#16a34a" : "#dc2626" }}
+                ></i>
+                {deleteResultModal.title}
+              </h3>
+              <p className="delete-modal-description">
+                {deleteResultModal.message}
+              </p>
+            </div>
+            <div className="delete-modal-actions">
+              <button
+                className="delete-modal-button"
+                type="button"
+                onClick={closeDeleteResultModal}
+                style={{
+                  background: deleteResultModal.ok
+                    ? "linear-gradient(135deg, #16a34a 0%, #15803d 100%)"
+                    : "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  color: "white",
+                }}
+              >
+                Close
               </button>
             </div>
           </div>
